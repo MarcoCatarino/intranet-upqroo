@@ -2,22 +2,22 @@ import {
   mysqlTable,
   bigint,
   varchar,
-  text,
   timestamp,
+  boolean,
 } from "drizzle-orm/mysql-core";
 
 export const documents = mysqlTable("documents", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
 
   title: varchar("title", { length: 255 }).notNull(),
 
-  description: text("description"),
+  departmentId: bigint("department_id", { mode: "number" }).notNull(),
 
-  ownerId: bigint("owner_id", { mode: "number" }).notNull(),
+  ownerId: varchar("owner_id", { length: 36 }).notNull(),
 
-  hash: varchar("hash", { length: 32 }).notNull(),
+  currentVersion: bigint("current_version", { mode: "number" }).default(1),
 
-  deletedAt: timestamp("deleted_at"),
+  isDeleted: boolean("is_deleted").default(false),
 
   createdAt: timestamp("created_at").defaultNow(),
 });
