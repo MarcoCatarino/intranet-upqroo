@@ -1,13 +1,19 @@
 import express from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import { db } from "./infrastructure/database/drizzle.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
+
+app.use(cookieParser());
+
+app.use("/auth", authRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
