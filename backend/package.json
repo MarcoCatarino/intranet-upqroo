@@ -9,19 +9,24 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "prod": "pnpm build && pnpm start",
-    "test": "node --test",
+    "test": "node --import tsx --test",
+    "typecheck": "tsc --project tsconfig.test.json",
     "db:test": "tsx src/infrastructure/database/db-test.ts"
   },
   "dependencies": {
+    "cookie-parser": "1.4.7",
     "dotenv": "16.4.5",
     "drizzle-orm": "0.36.0",
     "express": "4.19.2",
-    "jsonwebtoken": "9.0.2",
+    "google-auth-library": "10.6.1",
+    "jsonwebtoken": "9.0.3",
     "mysql2": "3.11.3",
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@types/cookie-parser": "1.4.10",
     "@types/express": "4.17.21",
+    "@types/jsonwebtoken": "9.0.10",
     "@types/node": "22.7.4",
     "tsx": "4.19.1",
     "typescript": "5.6.2"
