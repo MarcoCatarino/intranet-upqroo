@@ -14,12 +14,13 @@ export const env = {
   },
 
   GOOGLE: {
-    CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+    CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? ("" as string),
   },
 
   AUTH: {
     COOKIE_NAME: process.env.COOKIE_NAME ?? "auth_token",
-    JWT_SECRET: process.env.JWT_SECRET ?? "",
-    JWT_EXPIRES: process.env.JWT_EXPIRES ?? "4h",
+    JWT_SECRET: process.env.JWT_SECRET ?? ("" as string),
+    JWT_EXPIRES: (process.env.JWT_EXPIRES ??
+      "4h") as `${number}${"s" | "m" | "h" | "d"}`,
   },
 } as const;
