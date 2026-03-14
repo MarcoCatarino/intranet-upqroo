@@ -9,16 +9,23 @@ export interface UploadDocumentInput {
   mimeType: string;
 }
 
-export interface DocumentPermission {
-  userId: string;
-  documentId: number;
-  role: "viewer" | "editor";
-}
+export type DocumentPermissionType =
+  | "view"
+  | "download"
+  | "upload_version"
+  | "edit"
+  | "share";
 
-export type DocumentRole = "owner" | "editor" | "viewer";
+export interface DocumentPermission {
+  userId?: string;
+  departmentId?: number;
+  documentId: number;
+  permission: DocumentPermissionType;
+}
 
 export interface ShareDocumentInput {
   documentId: number;
-  userId: string;
-  role: DocumentRole;
+  userId?: string;
+  departmentId?: number;
+  permission: DocumentPermissionType;
 }

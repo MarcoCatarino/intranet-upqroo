@@ -8,3 +8,10 @@ export const createDocumentSchema = z.object({
 export const uploadDocumentSchema = z.object({
   documentId: z.number(),
 });
+
+export const shareDocumentSchema = z.object({
+  documentId: z.number(),
+  userId: z.string().optional(),
+  departmentId: z.number().optional(),
+  permission: z.enum(["view", "download", "upload_version", "edit", "share"]),
+});
