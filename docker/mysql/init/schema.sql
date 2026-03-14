@@ -47,6 +47,8 @@ CREATE TABLE department_users (
     department_id INT UNSIGNED NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    role VARCHAR(50) NOT NULL DEFAULT 'member',
+
     PRIMARY KEY (user_id, department_id),
 
     CONSTRAINT fk_du_user

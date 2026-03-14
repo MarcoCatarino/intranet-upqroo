@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { departments } from "../../infrastructure/database/schema/departments.schema.js";
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
@@ -39,7 +39,12 @@ export async function removeUserFromDepartment(
 ) {
   return db
     .delete(departmentUsers)
-    .where(eq(departmentUsers.departmentId, departmentId));
+    .where(
+      and(
+        eq(departmentUsers.departmentId, departmentId),
+        eq(departmentUsers.userId, userId),
+      ),
+    );
 }
 
 export async function listUsersInDepartment(departmentId: number) {

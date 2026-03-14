@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { or, eq, and } from "drizzle-orm";
+import { or, eq, and, isNull } from "drizzle-orm";
 
 import { documents } from "../../infrastructure/database/schema/documents.schema.js";
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
@@ -8,13 +8,15 @@ import { departmentUsers } from "../../infrastructure/database/schema/department
 
 export async function grantUserPermission(data: {
   documentId: number;
-  userId: string;
+  userId?: string;
+  departmentId?: number;
   permission: string;
   grantedBy: string;
 }) {
   await db.insert(documentPermissions).values({
     documentId: data.documentId,
-    userId: data.userId,
+    userId: data.userId ?? null,
+    departmentId: data.departmentId ?? null,
     permission: data.permission,
     grantedBy: data.grantedBy,
   });
@@ -27,27 +29,26 @@ export async function userHasDocumentAccess(
   const result = await db
     .select()
     .from(documents)
-
     .leftJoin(
       documentPermissions,
       eq(documentPermissions.documentId, documents.id),
     )
-
     .leftJoin(
       departmentUsers,
       eq(departmentUsers.departmentId, documentPermissions.departmentId),
     )
-
     .where(
       and(
         eq(documents.id, documentId),
-
         or(
           eq(documents.ownerId, userId),
 
           eq(documentPermissions.userId, userId),
 
-          and(eq(departmentUsers.userId, userId)),
+          and(
+            eq(documentPermissions.departmentId, departmentUsers.departmentId),
+            eq(departmentUsers.userId, userId),
+          ),
         ),
       ),
     );
@@ -60,6 +61,13 @@ export async function getDocumentVersions(documentId: number) {
     .select()
     .from(documentVersions)
     .where(eq(documentVersions.documentId, documentId));
+}
+
+export async function getDocumentPermissions(documentId: number) {
+  return db
+    .select()
+    .from(documentPermissions)
+    .where(eq(documentPermissions.documentId, documentId));
 }
 
 export async function createDocument(data: {
@@ -98,7 +106,32 @@ export async function createDocumentVersion(data: {
 }
 
 export async function listDocuments(userId: string) {
-  return db.select().from(documents).where(eq(documents.ownerId, userId));
+  return db
+    .selectDistinct()
+    .from(documents)
+    .leftJoin(
+      documentPermissions,
+      eq(documentPermissions.documentId, documents.id),
+    )
+    .leftJoin(
+      departmentUsers,
+      eq(departmentUsers.departmentId, documentPermissions.departmentId),
+    )
+    .where(
+      and(
+        isNull(documents.deletedAt),
+        or(
+          eq(documents.ownerId, userId),
+
+          eq(documentPermissions.userId, userId),
+
+          and(
+            eq(departmentUsers.userId, userId),
+            eq(documentPermissions.departmentId, departmentUsers.departmentId),
+          ),
+        ),
+      ),
+    );
 }
 
 export async function softDeleteDocument(documentId: number) {
