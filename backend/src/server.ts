@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { db } from "./infrastructure/database/drizzle.js";
 
 import authRoutes from "./modules/auth/auth.routes.js";
+import usersRoutes from "./modules/users/users.routes.js";
 import documentRoutes from "./modules/documents/documents.routes.js";
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/auth", authRoutes);
+app.use("/users", usersRoutes);
 app.use("/documents", documentRoutes);
 
 app.get("/health", (req, res) => {
