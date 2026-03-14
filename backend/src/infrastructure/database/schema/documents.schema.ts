@@ -3,7 +3,7 @@ import {
   bigint,
   varchar,
   timestamp,
-  boolean,
+  int,
 } from "drizzle-orm/mysql-core";
 
 export const documents = mysqlTable("documents", {
@@ -11,13 +11,15 @@ export const documents = mysqlTable("documents", {
 
   title: varchar("title", { length: 255 }).notNull(),
 
-  departmentId: bigint("department_id", { mode: "number" }).notNull(),
+  description: varchar("description", { length: 1000 }),
 
   ownerId: varchar("owner_id", { length: 36 }).notNull(),
 
-  currentVersion: bigint("current_version", { mode: "number" }).default(1),
+  departmentId: int("department_id").notNull(),
 
-  isDeleted: boolean("is_deleted").default(false),
+  currentVersion: int("current_version").default(1),
 
   createdAt: timestamp("created_at").defaultNow(),
+
+  deletedAt: timestamp("deleted_at"),
 });

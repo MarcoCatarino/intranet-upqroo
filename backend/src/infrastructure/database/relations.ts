@@ -3,7 +3,7 @@ import { relations } from "drizzle-orm";
 import { users } from "./schema/users.schema.js";
 import { departmentUsers } from "./schema/departments_users.schema.js";
 import { documentVersions } from "./schema/document_versions.schema.js";
-import { documentPermissions } from "./schema/document_permission.schema.js";
+import { documentPermissions } from "./schema/document_permissions.schema.js";
 import { departments } from "./schema/departments.schema.js";
 import { documents } from "./schema/documents.schema.js";
 

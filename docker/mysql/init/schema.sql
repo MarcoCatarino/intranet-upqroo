@@ -2,18 +2,18 @@
 -- DATABASE
 -- ===============================
 
-CREATE DATABASE IF NOT EXISTS intranet-upqroo
+CREATE DATABASE IF NOT EXISTS `intranet-upqroo`
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE intranet-upqroo;
+USE `intranet-upqroo`;
 
 -- ===============================
--- USERS
+-- USERS (UUID)
 -- ===============================
 
 CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id CHAR(36) PRIMARY KEY,
 
     google_id VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -45,7 +45,7 @@ CREATE TABLE departments (
 CREATE TABLE department_users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    user_id BIGINT UNSIGNED NOT NULL,
+    user_id CHAR(36) NOT NULL,
     department_id INT UNSIGNED NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -73,20 +73,27 @@ CREATE TABLE documents (
     title VARCHAR(255) NOT NULL,
     description TEXT,
 
-    owner_id BIGINT UNSIGNED NOT NULL,
+    owner_id CHAR(36) NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
 
-    hash VARCHAR(32) NOT NULL UNIQUE,
+    current_version INT UNSIGNED DEFAULT 1,
 
     deleted_at TIMESTAMP NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_documents_owner (owner_id),
+    INDEX idx_documents_department (department_id),
     INDEX idx_documents_deleted (deleted_at),
 
     CONSTRAINT fk_documents_owner
         FOREIGN KEY (owner_id)
         REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_documents_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
         ON DELETE CASCADE
 );
 
@@ -107,7 +114,7 @@ CREATE TABLE document_versions (
 
     mime_type VARCHAR(120),
 
-    uploaded_by BIGINT UNSIGNED NOT NULL,
+    uploaded_by CHAR(36) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -127,15 +134,15 @@ CREATE TABLE document_versions (
 );
 
 -- ===============================
--- DOCUMENT SHARES
+-- DOCUMENT PERMISSIONS
 -- ===============================
 
-CREATE TABLE document_shares (
+CREATE TABLE document_permissions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
     document_id BIGINT UNSIGNED NOT NULL,
 
-    user_id BIGINT UNSIGNED NULL,
+    user_id CHAR(36) NULL,
     department_id INT UNSIGNED NULL,
 
     permission ENUM(
@@ -146,29 +153,52 @@ CREATE TABLE document_shares (
         'share'
     ) DEFAULT 'view',
 
-    shared_by BIGINT UNSIGNED NOT NULL,
+    granted_by CHAR(36) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX idx_shares_document (document_id),
+    INDEX idx_permissions_document (document_id),
 
-    CONSTRAINT fk_shares_document
+    UNIQUE KEY uniq_document_user (document_id, user_id),
+    UNIQUE KEY uniq_document_department (document_id, department_id),
+
+    CONSTRAINT chk_permission_target
+        CHECK (
+            (user_id IS NOT NULL AND department_id IS NULL)
+            OR
+            (user_id IS NULL AND department_id IS NOT NULL)
+        ),
+
+    CONSTRAINT fk_permissions_document
         FOREIGN KEY (document_id)
         REFERENCES documents(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_shares_user
+    CONSTRAINT fk_permissions_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_shares_department
+    CONSTRAINT fk_permissions_department
         FOREIGN KEY (department_id)
         REFERENCES departments(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_shares_shared_by
-        FOREIGN KEY (shared_by)
+    CONSTRAINT fk_permissions_granted_by
+        FOREIGN KEY (granted_by)
         REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+-- ===============================
+-- PERFORMANCE INDEXES
+-- ===============================
+
+CREATE INDEX idx_permissions_lookup
+ON document_permissions (document_id, user_id, department_id);
+
+CREATE INDEX idx_documents_owner_department
+ON documents (owner_id, department_id);
+
+CREATE INDEX idx_versions_doc_version
+ON document_versions (document_id, version);
