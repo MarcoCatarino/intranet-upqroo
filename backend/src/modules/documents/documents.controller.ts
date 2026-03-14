@@ -1,11 +1,19 @@
 import { Request, Response } from "express";
+import { db } from "../../infrastructure/database/drizzle.js";
+import { eq, and } from "drizzle-orm";
 
-import { createDocumentSchema } from "./documents.validators.js";
+import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
+
+import {
+  createDocumentSchema,
+  shareDocumentSchema,
+} from "./documents.validators.js";
 import {
   createNewDocument,
   storeDocumentFile,
   shareDocument,
   getUserDocuments,
+  getPermissionsForDocument,
 } from "./documents.service.js";
 import {
   getDocumentVersions,
@@ -56,6 +64,17 @@ export async function versionsController(req: Request, res: Response) {
   res.json(versions);
 }
 
+export async function documentPermissionsController(
+  req: Request,
+  res: Response,
+) {
+  const documentId = Number(req.params.documentId);
+
+  const permissions = await getPermissionsForDocument(documentId);
+
+  res.json(permissions);
+}
+
 export async function listDocumentsController(req: Request, res: Response) {
   const docs = await getUserDocuments(req.user!.id);
 
@@ -63,24 +82,49 @@ export async function listDocumentsController(req: Request, res: Response) {
 }
 
 export async function shareDocumentController(req: Request, res: Response) {
-  const { documentId, userId, role } = req.body;
+  const { documentId, userId, departmentId, permission } =
+    shareDocumentSchema.parse(req.body);
+
+  if (!userId && !departmentId) {
+    return res.status(400).json({
+      message: "userId or departmentId required",
+    });
+  }
 
   await shareDocument({
     documentId,
     userId,
-    role,
+    departmentId,
+    permission,
     grantedBy: req.user!.id,
   });
 
-  res.json({ message: "shared" });
+  res.json({
+    message: "shared",
+  });
 }
 
 export async function downloadDocumentController(req: Request, res: Response) {
-  const { documentId, version } = req.params;
+  const documentId = Number(req.params.documentId);
+  const version = Number(req.params.version);
 
-  const filePath = `storage/documents/${documentId}/v${version}.pdf`;
+  const result = await db
+    .select()
+    .from(documentVersions)
+    .where(
+      and(
+        eq(documentVersions.documentId, documentId),
+        eq(documentVersions.version, version),
+      ),
+    );
 
-  res.download(filePath);
+  const file = result[0];
+
+  if (!file) {
+    return res.status(404).json({ message: "version not found" });
+  }
+
+  res.download(file.filePath);
 }
 
 export async function deleteDocumentController(req: Request, res: Response) {

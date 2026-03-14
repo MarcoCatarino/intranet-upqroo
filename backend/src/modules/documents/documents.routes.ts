@@ -7,6 +7,7 @@ import { uploadMiddleware } from "../../middleware/upload.middleware.js";
 import {
   createDocumentController,
   deleteDocumentController,
+  documentPermissionsController,
   downloadDocumentController,
   listDocumentsController,
   shareDocumentController,
@@ -18,26 +19,14 @@ const router = Router();
 
 /*
 |--------------------------------------------------------------------------
-| Document CRUD
+| DOCUMENTS
 |--------------------------------------------------------------------------
 */
 
-/**
- * Create a new document
- * POST /documents
- */
 router.post("/", authMiddleware, createDocumentController);
 
-/**
- * List documents accessible by the user
- * GET /documents
- */
 router.get("/", authMiddleware, listDocumentsController);
 
-/**
- * Soft delete document
- * DELETE /documents/:documentId
- */
 router.delete(
   "/:documentId",
   authMiddleware,
@@ -47,14 +36,17 @@ router.delete(
 
 /*
 |--------------------------------------------------------------------------
-| Document permissions
+| SHARING
 |--------------------------------------------------------------------------
 */
 
-/**
- * Share document with user or department
- * POST /documents/share
- */
+router.get(
+  "/:documentId/permissions",
+  authMiddleware,
+  documentRoleMiddleware("share"),
+  documentPermissionsController,
+);
+
 router.post(
   "/share",
   authMiddleware,
@@ -64,14 +56,10 @@ router.post(
 
 /*
 |--------------------------------------------------------------------------
-| Document versions
+| VERSIONS
 |--------------------------------------------------------------------------
 */
 
-/**
- * Upload new version of document
- * POST /documents/upload
- */
 router.post(
   "/upload",
   authMiddleware,
@@ -80,10 +68,6 @@ router.post(
   uploadDocumentController,
 );
 
-/**
- * List document versions
- * GET /documents/:documentId/versions
- */
 router.get(
   "/:documentId/versions",
   authMiddleware,
@@ -91,15 +75,15 @@ router.get(
   versionsController,
 );
 
-/**
- * Download specific version
- * GET /documents/:documentId/version/:version
- */
+/*
+|--------------------------------------------------------------------------
+| DOWNLOAD
+|--------------------------------------------------------------------------
+*/
+
 router.get(
   "/:documentId/version/:version",
   authMiddleware,
   documentRoleMiddleware("download"),
   downloadDocumentController,
 );
-
-export default router;

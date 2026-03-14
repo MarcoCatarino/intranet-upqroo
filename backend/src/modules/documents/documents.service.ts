@@ -8,6 +8,7 @@ import { documentVersions } from "../../infrastructure/database/schema/document_
 import {
   createDocument,
   createDocumentVersion,
+  getDocumentPermissions,
   grantUserPermission,
   listDocuments,
 } from "./documents.repository.js";
@@ -40,41 +41,68 @@ export async function storeDocumentFile(data: {
 }) {
   await ensureDocumentFolder(data.documentId);
 
-  const result = await db
-    .select({
-      maxVersion: sql<number>`MAX(${documentVersions.version})`,
-    })
-    .from(documentVersions)
-    .where(eq(documentVersions.documentId, data.documentId));
+  await db.transaction(async (tx) => {
+    const result = await tx
+      .select({
+        maxVersion: sql<number>`MAX(${documentVersions.version})`,
+      })
+      .from(documentVersions)
+      .where(eq(documentVersions.documentId, data.documentId));
 
-  const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
+    const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
 
-  const ext = path.extname(data.tmpPath);
+    const ext = path.extname(data.tmpPath);
 
-  const finalPath = getDocumentVersionPath(data.documentId, nextVersion, ext);
+    const finalPath = getDocumentVersionPath(data.documentId, nextVersion, ext);
 
-  await fs.rename(data.tmpPath, finalPath);
+    await fs.rename(data.tmpPath, finalPath);
 
-  await createDocumentVersion({
-    documentId: data.documentId,
-    version: nextVersion,
-    filePath: finalPath,
-    mimeType: data.mimeType,
-    fileSize: data.fileSize,
-    uploadedBy: data.uploadedBy,
+    await tx.insert(documentVersions).values({
+      documentId: data.documentId,
+      version: nextVersion,
+      filePath: finalPath,
+      mimeType: data.mimeType,
+      fileSize: data.fileSize,
+      uploadedBy: data.uploadedBy,
+    });
   });
+}
+
+export async function getPermissionsForDocument(documentId: number) {
+  const permissions = await getDocumentPermissions(documentId);
+
+  const users = permissions
+    .filter((p) => p.userId)
+    .map((p) => ({
+      userId: p.userId,
+      permission: p.permission,
+    }));
+
+  const departments = permissions
+    .filter((p) => p.departmentId)
+    .map((p) => ({
+      departmentId: p.departmentId,
+      permission: p.permission,
+    }));
+
+  return {
+    users,
+    departments,
+  };
 }
 
 export async function shareDocument(data: {
   documentId: number;
-  userId: string;
-  role: "viewer" | "editor";
+  userId?: string;
+  departmentId?: number;
+  permission: string;
   grantedBy: string;
 }) {
   await grantUserPermission({
     documentId: data.documentId,
     userId: data.userId,
-    permission: data.role,
+    departmentId: data.departmentId,
+    permission: data.permission,
     grantedBy: data.grantedBy,
   });
 }
