@@ -43,14 +43,11 @@ CREATE TABLE departments (
 -- ===============================
 
 CREATE TABLE department_users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
     user_id CHAR(36) NOT NULL,
     department_id INT UNSIGNED NOT NULL,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE KEY uniq_user_department (user_id, department_id),
+    PRIMARY KEY (user_id, department_id),
 
     CONSTRAINT fk_du_user
         FOREIGN KEY (user_id)
