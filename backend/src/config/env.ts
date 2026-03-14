@@ -5,6 +5,9 @@ dotenv.config();
 export const env = {
   PORT: Number(process.env.PORT) || 3000,
 
+  STORAGE_PATH: process.env.STORAGE_PATH,
+  TMP_PATH: process.env.TMP_PATH,
+
   DB: {
     HOST: process.env.DB_HOST ?? "localhost",
     PORT: Number(process.env.DB_PORT) || 3306,
