@@ -2,7 +2,16 @@ import multer from "multer";
 import path from "node:path";
 import fs from "node:fs";
 
-const TMP_DIR = "tmp/uploads";
+import type { Request } from "express";
+import type { FileFilterCallback } from "multer";
+
+import { env } from "../config/env.js";
+
+if (!env.TMP_PATH) {
+  throw new Error("TMP_PATH not configured");
+}
+
+const TMP_DIR = env.TMP_PATH as string;
 
 if (!fs.existsSync(TMP_DIR)) {
   fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -22,9 +31,13 @@ const storage = multer.diskStorage({
   },
 });
 
-function fileFilter(_req: any, file: Express.Multer.File, cb: any) {
+function fileFilter(
+  _req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback,
+) {
   if (file.mimetype !== "application/pdf") {
-    return cb(new Error("Only PDF files allowed"), false);
+    return cb(new Error("Only PDF files allowed"));
   }
 
   cb(null, true);
