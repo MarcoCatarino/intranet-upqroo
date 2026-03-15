@@ -21,9 +21,17 @@ export const shareDocumentSchema = z
     departmentId: z.number().optional(),
     permission: z.enum(["view", "download", "upload_version", "edit", "share"]),
   })
-  .refine((data) => data.userId || data.departmentId, {
-    message: "userId or departmentId required",
-  });
+  .refine(
+    (data) => {
+      const hasUser = !!data.userId;
+      const hasDepartment = !!data.departmentId;
+
+      return (hasUser || hasDepartment) && !(hasUser && hasDepartment);
+    },
+    {
+      message: "Must provide either userId or departmentId",
+    },
+  );
 
 export const revokePermissionSchema = z
   .object({
