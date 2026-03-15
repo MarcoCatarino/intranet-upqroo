@@ -134,6 +134,30 @@ export async function listDocuments(userId: string) {
     );
 }
 
+export async function updateDocumentMetadata(
+  documentId: number,
+  data: {
+    title?: string;
+    departmentId?: number;
+  },
+) {
+  await db
+    .update(documents)
+    .set({
+      ...data,
+    })
+    .where(eq(documents.id, documentId));
+}
+
+export async function getDocumentById(documentId: number) {
+  const result = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), isNull(documents.deletedAt)));
+
+  return result[0];
+}
+
 export async function softDeleteDocument(documentId: number) {
   await db
     .update(documents)
@@ -141,4 +165,24 @@ export async function softDeleteDocument(documentId: number) {
       deletedAt: new Date(),
     })
     .where(eq(documents.id, documentId));
+}
+
+export async function revokePermission(data: {
+  documentId: number;
+  userId?: string;
+  departmentId?: number;
+}) {
+  await db
+    .delete(documentPermissions)
+    .where(
+      and(
+        eq(documentPermissions.documentId, data.documentId),
+        or(
+          data.userId ? eq(documentPermissions.userId, data.userId) : undefined,
+          data.departmentId
+            ? eq(documentPermissions.departmentId, data.departmentId)
+            : undefined,
+        ),
+      ),
+    );
 }
