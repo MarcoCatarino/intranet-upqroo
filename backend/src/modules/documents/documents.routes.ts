@@ -9,8 +9,11 @@ import {
   deleteDocumentController,
   documentPermissionsController,
   downloadDocumentController,
+  getDocumentController,
   listDocumentsController,
+  revokePermissionController,
   shareDocumentController,
+  updateDocumentController,
   uploadDocumentController,
   versionsController,
 } from "./documents.controller.js";
@@ -26,6 +29,20 @@ const router = Router();
 router.post("/", authMiddleware, createDocumentController);
 
 router.get("/", authMiddleware, listDocumentsController);
+
+router.get(
+  "/:documentId",
+  authMiddleware,
+  documentRoleMiddleware("view"),
+  getDocumentController,
+);
+
+router.patch(
+  "/:documentId",
+  authMiddleware,
+  documentRoleMiddleware("edit"),
+  updateDocumentController,
+);
 
 router.delete(
   "/:documentId",
@@ -52,6 +69,13 @@ router.post(
   authMiddleware,
   documentRoleMiddleware("share"),
   shareDocumentController,
+);
+
+router.delete(
+  "/:documentId/permissions",
+  authMiddleware,
+  documentRoleMiddleware("share"),
+  revokePermissionController,
 );
 
 /*
