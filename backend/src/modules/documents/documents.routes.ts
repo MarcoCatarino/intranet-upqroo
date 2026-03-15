@@ -111,3 +111,5 @@ router.get(
   documentRoleMiddleware("download"),
   downloadDocumentController,
 );
+
+export default router;
