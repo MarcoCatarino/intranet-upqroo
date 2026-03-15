@@ -6,7 +6,9 @@ import { documentVersions } from "../../infrastructure/database/schema/document_
 
 import {
   createDocumentSchema,
+  revokePermissionSchema,
   shareDocumentSchema,
+  updateDocumentSchema,
 } from "./documents.validators.js";
 import {
   createNewDocument,
@@ -14,6 +16,9 @@ import {
   shareDocument,
   getUserDocuments,
   getPermissionsForDocument,
+  revokeDocumentPermission,
+  getDocument,
+  updateDocument,
 } from "./documents.service.js";
 import {
   getDocumentVersions,
@@ -58,6 +63,18 @@ export async function uploadDocumentController(req: Request, res: Response) {
   });
 }
 
+export async function updateDocumentController(req: Request, res: Response) {
+  const documentId = Number(req.params.documentId);
+
+  const data = updateDocumentSchema.parse(req.body);
+
+  await updateDocument(documentId, data);
+
+  res.json({
+    message: "document updated",
+  });
+}
+
 export async function versionsController(req: Request, res: Response) {
   const versions = await getDocumentVersions(Number(req.params.documentId));
 
@@ -81,6 +98,20 @@ export async function listDocumentsController(req: Request, res: Response) {
   res.json(docs);
 }
 
+export async function getDocumentController(req: Request, res: Response) {
+  const documentId = Number(req.params.documentId);
+
+  const document = await getDocument(documentId);
+
+  if (!document) {
+    return res.status(404).json({
+      message: "document not found",
+    });
+  }
+
+  res.json(document);
+}
+
 export async function shareDocumentController(req: Request, res: Response) {
   const { documentId, userId, departmentId, permission } =
     shareDocumentSchema.parse(req.body);
@@ -101,6 +132,22 @@ export async function shareDocumentController(req: Request, res: Response) {
 
   res.json({
     message: "shared",
+  });
+}
+
+export async function revokePermissionController(req: Request, res: Response) {
+  const documentId = Number(req.params.documentId);
+
+  const { userId, departmentId } = revokePermissionSchema.parse(req.body);
+
+  await revokeDocumentPermission({
+    documentId,
+    userId,
+    departmentId,
+  });
+
+  res.json({
+    message: "permission revoked",
   });
 }
 

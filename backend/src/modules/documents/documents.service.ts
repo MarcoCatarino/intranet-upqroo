@@ -8,9 +8,12 @@ import { documentVersions } from "../../infrastructure/database/schema/document_
 import {
   createDocument,
   createDocumentVersion,
+  getDocumentById,
   getDocumentPermissions,
   grantUserPermission,
   listDocuments,
+  revokePermission,
+  updateDocumentMetadata,
 } from "./documents.repository.js";
 
 import {
@@ -68,6 +71,16 @@ export async function storeDocumentFile(data: {
   });
 }
 
+export async function updateDocument(
+  documentId: number,
+  data: {
+    title?: string;
+    departmentId?: number;
+  },
+) {
+  await updateDocumentMetadata(documentId, data);
+}
+
 export async function getPermissionsForDocument(documentId: number) {
   const permissions = await getDocumentPermissions(documentId);
 
@@ -91,6 +104,10 @@ export async function getPermissionsForDocument(documentId: number) {
   };
 }
 
+export async function getDocument(documentId: number) {
+  return getDocumentById(documentId);
+}
+
 export async function shareDocument(data: {
   documentId: number;
   userId?: string;
@@ -105,6 +122,14 @@ export async function shareDocument(data: {
     permission: data.permission,
     grantedBy: data.grantedBy,
   });
+}
+
+export async function revokeDocumentPermission(data: {
+  documentId: number;
+  userId?: string;
+  departmentId?: number;
+}) {
+  await revokePermission(data);
 }
 
 export async function getUserDocuments(userId: string) {
