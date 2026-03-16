@@ -20,6 +20,7 @@ import {
   revokeDocumentPermission,
   getDocument,
   updateDocument,
+  searchUserDocuments,
 } from "./documents.service.js";
 
 import {
@@ -180,4 +181,12 @@ export async function deleteDocumentController(req: Request, res: Response) {
   await softDeleteDocument(Number(req.params.documentId));
 
   res.json({ message: "deleted" });
+}
+
+export async function searchDocumentsController(req: Request, res: Response) {
+  const query = String(req.query.q || "");
+
+  const results = await searchUserDocuments(req.user!.id, query);
+
+  res.json(results);
 }
