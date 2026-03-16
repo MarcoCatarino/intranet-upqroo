@@ -6,20 +6,24 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "worker": "tsx watch src/worker.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:worker": "node dist/worker.js",
     "prod": "pnpm build && pnpm start",
     "test": "node --import tsx --test",
     "typecheck": "tsc --project tsconfig.test.json",
     "db:test": "tsx src/infrastructure/database/db-test.ts"
   },
   "dependencies": {
+    "bullmq": "5.71.0",
     "cookie-parser": "1.4.7",
     "dotenv": "16.4.5",
     "drizzle-orm": "0.36.0",
     "express": "4.19.2",
-    "express-rate-limit": "^8.3.1",
+    "express-rate-limit": "8.3.1",
     "google-auth-library": "10.6.1",
+    "ioredis": "5.10.0",
     "jsonwebtoken": "9.0.3",
     "multer": "2.1.1",
     "mysql2": "3.11.3",
@@ -33,6 +37,11 @@
     "@types/node": "22.7.4",
     "tsx": "4.19.1",
     "typescript": "5.6.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "ioredis": "5.10.0"
+    }
   },
   "engines": {
     "node": "24.14.0"

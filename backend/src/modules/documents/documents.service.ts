@@ -4,6 +4,7 @@ import { db } from "../../infrastructure/database/drizzle.js";
 import { eq, sql } from "drizzle-orm";
 
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
+import { documents } from "../../infrastructure/database/schema/documents.schema.js";
 
 import {
   createDocument,
@@ -21,6 +22,8 @@ import {
   getDocumentVersionPath,
 } from "../../infrastructure/storage/store.service.js";
 
+import { documentQueue } from "../../infrastructure/queues/document.queue.js";
+
 export async function createNewDocument(
   title: string,
   userId: string,
@@ -33,6 +36,28 @@ export async function createNewDocument(
   });
 
   return documentId;
+}
+
+export async function queueDocumentUpload(data: {
+  documentId: number;
+  tmpPath: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedBy: string;
+}) {
+  await documentQueue.add(
+    "process-document",
+    {
+      documentId: data.documentId,
+      tmpPath: data.tmpPath,
+      mimeType: data.mimeType,
+      size: data.fileSize,
+      uploadedBy: Number(data.uploadedBy),
+    },
+    {
+      jobId: `document-upload-${data.documentId}-${Date.now()}`,
+    },
+  );
 }
 
 export async function storeDocumentFile(data: {
@@ -68,6 +93,13 @@ export async function storeDocumentFile(data: {
       fileSize: data.fileSize,
       uploadedBy: data.uploadedBy,
     });
+
+    await tx
+      .update(documents)
+      .set({
+        currentVersion: nextVersion,
+      })
+      .where(eq(documents.id, data.documentId));
   });
 }
 
