@@ -7,17 +7,23 @@ import { storeDocumentFile } from "../../modules/documents/documents.service.js"
 export const documentWorker = new Worker<DocumentProcessingJob>(
   "document-processing",
   async (job) => {
-    const { documentId, tmpPath, mimeType, size, uploadedBy } = job.data;
+    try {
+      const { documentId, tmpPath, mimeType, size, uploadedBy } = job.data;
 
-    console.log("Processing document job");
+      console.log("Processing document job");
 
-    await storeDocumentFile({
-      documentId,
-      tmpPath,
-      mimeType,
-      fileSize: size,
-      uploadedBy: String(uploadedBy),
-    });
+      await storeDocumentFile({
+        documentId,
+        tmpPath,
+        mimeType,
+        fileSize: size,
+        uploadedBy: String(uploadedBy),
+      });
+    } catch (error) {
+      console.error("Document worker error:", error);
+
+      throw error;
+    }
   },
   {
     connection: redisConnection,

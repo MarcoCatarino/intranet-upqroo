@@ -1,19 +1,25 @@
-import { mysqlTable, bigint, varchar, timestamp } from "drizzle-orm/mysql-core";
+import {
+  mysqlTable,
+  int,
+  text,
+  varchar,
+  timestamp,
+} from "drizzle-orm/mysql-core";
 
 export const documentVersions = mysqlTable("document_versions", {
-  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  id: int("id").primaryKey().autoincrement(),
 
-  documentId: bigint("document_id", { mode: "number" }).notNull(),
+  documentId: int("document_id").notNull(),
 
-  version: bigint("version", { mode: "number" }).notNull(),
+  version: int("version").notNull(),
 
-  filePath: varchar("file_path", { length: 500 }).notNull(),
+  filePath: text("file_path").notNull(),
 
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
 
-  fileSize: bigint("file_size", { mode: "number" }).notNull(),
+  fileSize: int("file_size").notNull(),
 
   uploadedBy: varchar("uploaded_by", { length: 36 }).notNull(),
 
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
