@@ -31,6 +31,8 @@ export const documentWorker = new Worker<DocumentProcessingJob>(
   },
 );
 
+// Status
+
 documentWorker.on("completed", (job) => {
   console.log(`Document job ${job.id} completed`);
 });

@@ -6,6 +6,8 @@ import {
   timestamp,
 } from "drizzle-orm/mysql-core";
 
+// BigInt -> Int 
+
 export const documentVersions = mysqlTable("document_versions", {
   id: int("id").primaryKey().autoincrement(),
 

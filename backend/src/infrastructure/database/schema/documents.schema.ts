@@ -1,5 +1,7 @@
 import { mysqlTable, int, varchar, timestamp } from "drizzle-orm/mysql-core";
 
+// BigInt -> Int 
+
 export const documents = mysqlTable("documents", {
   id: int("id").primaryKey().autoincrement(),
 
