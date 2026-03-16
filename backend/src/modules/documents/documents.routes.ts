@@ -12,6 +12,7 @@ import {
   getDocumentController,
   listDocumentsController,
   revokePermissionController,
+  searchDocumentsController,
   shareDocumentController,
   updateDocumentController,
   uploadDocumentController,
@@ -30,6 +31,8 @@ const router = Router();
 router.post("/", authMiddleware, createDocumentController);
 
 router.get("/", authMiddleware, listDocumentsController);
+
+router.get("/search", authMiddleware, searchDocumentsController);
 
 router.get(
   "/:documentId",

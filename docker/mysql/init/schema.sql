@@ -85,6 +85,8 @@ CREATE TABLE documents (
     INDEX idx_documents_department (department_id),
     INDEX idx_documents_deleted (deleted_at),
 
+    FULLTEXT INDEX idx_documents_search (title, description),
+
     CONSTRAINT fk_documents_owner
         FOREIGN KEY (owner_id)
         REFERENCES users(id)
