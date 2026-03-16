@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { or, eq, and, isNull } from "drizzle-orm";
+import { or, eq, and, isNull, sql } from "drizzle-orm";
 
 import { documents } from "../../infrastructure/database/schema/documents.schema.js";
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
@@ -185,4 +185,35 @@ export async function revokePermission(data: {
         ),
       ),
     );
+}
+
+export async function searchDocuments(userId: string, query: string) {
+  const result = await db.execute(sql`
+    SELECT DISTINCT
+      d.*,
+      MATCH(d.title, d.description)
+      AGAINST (${query} IN NATURAL LANGUAGE MODE) AS score
+    FROM documents d
+
+    LEFT JOIN document_permissions dp
+      ON dp.document_id = d.id
+
+    LEFT JOIN department_users du
+      ON du.department_id = dp.department_id
+
+    WHERE
+      d.deleted_at IS NULL
+      AND (
+        d.owner_id = ${userId}
+        OR dp.user_id = ${userId}
+        OR du.user_id = ${userId}
+      )
+      AND MATCH(d.title, d.description)
+      AGAINST (${query} IN NATURAL LANGUAGE MODE)
+
+    ORDER BY score DESC
+    LIMIT 20
+  `);
+
+  return result;
 }

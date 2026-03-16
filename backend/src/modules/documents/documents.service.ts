@@ -14,6 +14,7 @@ import {
   grantUserPermission,
   listDocuments,
   revokePermission,
+  searchDocuments,
   updateDocumentMetadata,
 } from "./documents.repository.js";
 
@@ -166,4 +167,12 @@ export async function revokeDocumentPermission(data: {
 
 export async function getUserDocuments(userId: string) {
   return listDocuments(userId);
+}
+
+export async function searchUserDocuments(userId: string, query: string) {
+  if (!query || query.length < 2) {
+    return [];
+  }
+
+  return searchDocuments(userId, query);
 }
