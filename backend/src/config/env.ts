@@ -26,4 +26,9 @@ export const env = {
     JWT_EXPIRES: (process.env.JWT_EXPIRES ??
       "4h") as `${number}${"s" | "m" | "h" | "d"}`,
   },
+
+  REDIS: {
+    REDIS_HOST: process.env.REDIS_HOST,
+    REDIS_PORT: process.env.REDIS_PORT,
+  },
 } as const;

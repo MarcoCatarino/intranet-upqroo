@@ -10,9 +10,10 @@ import {
   shareDocumentSchema,
   updateDocumentSchema,
 } from "./documents.validators.js";
+
 import {
   createNewDocument,
-  storeDocumentFile,
+  queueDocumentUpload,
   shareDocument,
   getUserDocuments,
   getPermissionsForDocument,
@@ -20,6 +21,7 @@ import {
   getDocument,
   updateDocument,
 } from "./documents.service.js";
+
 import {
   getDocumentVersions,
   softDeleteDocument,
@@ -50,7 +52,7 @@ export async function uploadDocumentController(req: Request, res: Response) {
 
   const documentId = Number(req.body.documentId);
 
-  await storeDocumentFile({
+  await queueDocumentUpload({
     documentId,
     tmpPath: file.path,
     mimeType: file.mimetype,
@@ -59,7 +61,7 @@ export async function uploadDocumentController(req: Request, res: Response) {
   });
 
   res.json({
-    message: "uploaded",
+    message: "uploaded and queued",
   });
 }
 

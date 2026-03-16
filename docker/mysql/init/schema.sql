@@ -201,3 +201,15 @@ ON documents (owner_id, department_id);
 
 CREATE INDEX idx_versions_doc_version
 ON document_versions (document_id, version);
+
+CREATE INDEX idx_permissions_user
+ON document_permissions (user_id);
+
+CREATE INDEX idx_permissions_department
+ON document_permissions (department_id);
+
+CREATE INDEX idx_documents_active_department
+ON documents (department_id, deleted_at);
+
+CREATE INDEX idx_versions_doc_version_desc
+ON document_versions (document_id, version DESC);

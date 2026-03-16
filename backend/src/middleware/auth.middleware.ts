@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import { env } from "../config/env.js";
 
@@ -8,7 +8,7 @@ export function authMiddleware(
   res: Response,
   next: NextFunction,
 ) {
-  const token = req.cookies?.token;
+  const token = req.cookies?.[env.AUTH.COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({

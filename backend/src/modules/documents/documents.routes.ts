@@ -17,6 +17,7 @@ import {
   uploadDocumentController,
   versionsController,
 } from "./documents.controller.js";
+import { retryFailedJobsController } from "./documents.admin.controller.js";
 
 const router = Router();
 
@@ -78,6 +79,8 @@ router.delete(
   revokePermissionController,
 );
 
+router.post("/retry-failed", retryFailedJobsController);
+
 /*
 |--------------------------------------------------------------------------
 | VERSIONS
@@ -111,3 +114,5 @@ router.get(
   documentRoleMiddleware("download"),
   downloadDocumentController,
 );
+
+export default router;

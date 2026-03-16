@@ -11,11 +11,15 @@ if (!env.TMP_PATH) {
   throw new Error("TMP_PATH not configured");
 }
 
-const TMP_DIR = env.TMP_PATH as string;
+const TMP_DIR = env.TMP_PATH;
 
 if (!fs.existsSync(TMP_DIR)) {
   fs.mkdirSync(TMP_DIR, { recursive: true });
 }
+
+const allowedMimeTypes = ["application/pdf"];
+
+const allowedExtensions = [".pdf"];
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
@@ -23,9 +27,9 @@ const storage = multer.diskStorage({
   },
 
   filename: (_req, file, cb) => {
-    const unique = "tmp-" + Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const unique = `tmp-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
 
     cb(null, unique + ext);
   },
@@ -36,8 +40,16 @@ function fileFilter(
   file: Express.Multer.File,
   cb: FileFilterCallback,
 ) {
-  if (file.mimetype !== "application/pdf") {
-    return cb(new Error("Only PDF files allowed"));
+  const mime = file.mimetype;
+
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  if (!allowedMimeTypes.includes(mime)) {
+    return cb(new Error("Invalid file type. Only PDF allowed"));
+  }
+
+  if (!allowedExtensions.includes(ext)) {
+    return cb(new Error("Invalid file extension"));
   }
 
   cb(null, true);
@@ -48,6 +60,6 @@ export const uploadMiddleware = multer({
   fileFilter,
 
   limits: {
-    fileSize: 20 * 1024 * 1024,
+    fileSize: 20 * 1024 * 1024, // 20MB
   },
 });

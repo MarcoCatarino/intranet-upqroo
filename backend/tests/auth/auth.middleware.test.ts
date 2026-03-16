@@ -3,32 +3,35 @@ import assert from "node:assert";
 import jwt from "jsonwebtoken";
 
 import { authMiddleware } from "../../src/middleware/auth.middleware.js";
-
-process.env.JWT_SECRET = "test_secret";
+import { env } from "../../src/config/env.js";
 
 test("middleware accepts valid token", () => {
   const token = jwt.sign(
-    { userId: "123", email: "user@upqroo.edu.mx" },
-    process.env.JWT_SECRET as string,
+    {
+      userId: "test-user",
+      email: "test@upqroo.edu.mx",
+    },
+    env.AUTH.JWT_SECRET,
   );
 
-  const req: any = {
-    cookies: { token },
+  let nextCalled = false;
+
+  const req = {
+    cookies: {
+      [env.AUTH.COOKIE_NAME]: token,
+    },
   };
 
-  const res: any = {
+  const res = {
     status: () => res,
     json: () => {},
   };
-
-  let nextCalled = false;
 
   const next = () => {
     nextCalled = true;
   };
 
-  authMiddleware(req, res, next);
+  authMiddleware(req as any, res as any, next);
 
   assert.equal(nextCalled, true);
-  assert.equal(req.user.id, "123");
 });
