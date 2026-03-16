@@ -1,13 +1,9 @@
-import {
-  mysqlTable,
-  bigint,
-  varchar,
-  timestamp,
-  int,
-} from "drizzle-orm/mysql-core";
+import { mysqlTable, int, varchar, timestamp } from "drizzle-orm/mysql-core";
+
+// BigInt -> Int 
 
 export const documents = mysqlTable("documents", {
-  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  id: int("id").primaryKey().autoincrement(),
 
   title: varchar("title", { length: 255 }).notNull(),
 
@@ -17,9 +13,9 @@ export const documents = mysqlTable("documents", {
 
   departmentId: int("department_id").notNull(),
 
-  currentVersion: int("current_version").default(1),
+  currentVersion: int("current_version").notNull().default(1),
 
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 
   deletedAt: timestamp("deleted_at"),
 });
