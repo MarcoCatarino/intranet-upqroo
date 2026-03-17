@@ -9,6 +9,7 @@ import {
   deleteDocumentController,
   documentPermissionsController,
   downloadDocumentController,
+  getAuditLogsController,
   getDocumentController,
   listDocumentsController,
   revokePermissionController,
@@ -109,6 +110,13 @@ router.delete(
   authMiddleware,
   documentRoleMiddleware("share"),
   revokePermissionController,
+);
+
+router.get(
+  "/:documentId/audit",
+  authMiddleware,
+  documentRoleMiddleware("view"),
+  getAuditLogsController,
 );
 
 /*

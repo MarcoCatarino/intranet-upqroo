@@ -194,6 +194,39 @@ CREATE TABLE document_permissions (
 );
 
 -- ===============================
+-- DOCUMENT AUDIT LOGS
+-- ===============================
+
+CREATE TABLE document_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    document_id BIGINT UNSIGNED NOT NULL,
+
+    user_id CHAR(36) NOT NULL,
+
+    action VARCHAR(50) NOT NULL,
+
+    metadata JSON,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_audit_document (document_id),
+    INDEX idx_audit_user (user_id),
+    INDEX idx_audit_action (action),
+    INDEX idx_audit_created (created_at),
+
+    CONSTRAINT fk_audit_document
+        FOREIGN KEY (document_id)
+        REFERENCES documents(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_audit_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
 -- PERFORMANCE INDEXES
 -- ===============================
 
