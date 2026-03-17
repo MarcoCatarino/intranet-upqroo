@@ -196,11 +196,38 @@ export async function revokePermission(data: {
 }
 
 export async function searchDocuments(userId: string, query: string) {
+  const safeLike = `%${query.replace(/[%_\\]/g, "\\$&")}%`;
+
   const result = await db.execute(sql`
     SELECT DISTINCT
-      d.*,
-      MATCH(d.title, d.description)
-      AGAINST (${query} IN NATURAL LANGUAGE MODE) AS score
+      d.id,
+      d.title,
+      d.description,
+      d.owner_id,
+      d.department_id,
+      d.current_version,
+      d.created_at,
+
+      (
+        CASE
+          WHEN MATCH(d.title, d.description)
+               AGAINST (${query} IN NATURAL LANGUAGE MODE)
+          THEN MATCH(d.title, d.description)
+               AGAINST (${query} IN NATURAL LANGUAGE MODE) * 2
+          ELSE 0
+        END
+        +
+        CASE
+          WHEN d.title LIKE ${safeLike} THEN 1.5
+          ELSE 0
+        END
+        +
+        CASE
+          WHEN d.description LIKE ${safeLike} THEN 0.5
+          ELSE 0
+        END
+      ) AS score
+
     FROM documents d
 
     LEFT JOIN document_permissions dp
@@ -216,14 +243,21 @@ export async function searchDocuments(userId: string, query: string) {
         OR dp.user_id = ${userId}
         OR du.user_id = ${userId}
       )
-      AND MATCH(d.title, d.description)
-      AGAINST (${query} IN NATURAL LANGUAGE MODE)
+      AND (
+        -- Coincidencia parcial por LIKE
+        d.title LIKE ${safeLike}
+        OR d.description LIKE ${safeLike}
+        -- Coincidencia semántica por FULLTEXT
+        OR MATCH(d.title, d.description)
+           AGAINST (${query} IN NATURAL LANGUAGE MODE)
+      )
 
     ORDER BY score DESC
+
     LIMIT 20
   `);
 
-  return result;
+  return result[0];
 }
 
 export async function countUserDocuments(userId: string) {
