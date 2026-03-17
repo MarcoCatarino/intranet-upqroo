@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 
 import { db } from "./infrastructure/database/drizzle.js";
 
@@ -39,6 +40,13 @@ app.use((req, res, next) => {
 
   next();
 });
+
+//* Comprime respuestas JSON y texto automáticamente [ignora si es menor a 1KB]
+app.use(
+  compression({
+    threshold: 1024,
+  }),
+);
 
 app.use(express.json());
 app.use(cookieParser());

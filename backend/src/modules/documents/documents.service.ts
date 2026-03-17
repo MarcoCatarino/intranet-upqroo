@@ -7,6 +7,7 @@ import { documentVersions } from "../../infrastructure/database/schema/document_
 import { documents } from "../../infrastructure/database/schema/documents.schema.js";
 
 import {
+  countUserDocuments,
   createDocument,
   createDocumentVersion,
   getDocumentById,
@@ -232,7 +233,18 @@ export async function getUserDocuments(
   page: number,
   limit: number,
 ) {
-  return listDocuments(userId, page, limit);
+  const [data, total] = await Promise.all([
+    listDocuments(userId, page, limit),
+    countUserDocuments(userId),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 export async function searchUserDocuments(userId: string, query: string) {

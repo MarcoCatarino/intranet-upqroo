@@ -34,15 +34,9 @@ export async function getMyProfileController(req: Request, res: Response) {
 export async function listUsersController(req: Request, res: Response) {
   const { page, limit } = paginationSchema.parse(req.query);
 
-  const users = await getAllUsers(page, limit);
+  const result = await getAllUsers(page, limit);
 
-  res.json({
-    data: users,
-    meta: {
-      page,
-      limit,
-    },
-  });
+  res.json(result);
 }
 
 /**

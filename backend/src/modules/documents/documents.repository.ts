@@ -225,3 +225,32 @@ export async function searchDocuments(userId: string, query: string) {
 
   return result;
 }
+
+export async function countUserDocuments(userId: string) {
+  const result = await db
+    .selectDistinct({ id: documents.id })
+    .from(documents)
+    .leftJoin(
+      documentPermissions,
+      eq(documentPermissions.documentId, documents.id),
+    )
+    .leftJoin(
+      departmentUsers,
+      eq(departmentUsers.departmentId, documentPermissions.departmentId),
+    )
+    .where(
+      and(
+        isNull(documents.deletedAt),
+        or(
+          eq(documents.ownerId, userId),
+          eq(documentPermissions.userId, userId),
+          and(
+            eq(departmentUsers.userId, userId),
+            eq(documentPermissions.departmentId, departmentUsers.departmentId),
+          ),
+        ),
+      ),
+    );
+
+  return result.length;
+}

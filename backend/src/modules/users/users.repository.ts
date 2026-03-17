@@ -52,3 +52,9 @@ export async function listUsersByDepartment(departmentId: number) {
     .innerJoin(users, eq(users.id, departmentUsers.userId))
     .where(eq(departmentUsers.departmentId, departmentId));
 }
+
+export async function countUsers() {
+  const result = await db.select({ id: users.id }).from(users);
+
+  return result.length;
+}
