@@ -1,9 +1,11 @@
+import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatarUrl: string | null;
-  isAdmin: number;
+  role: UserRole;
   createdAt: Date;
 }
 

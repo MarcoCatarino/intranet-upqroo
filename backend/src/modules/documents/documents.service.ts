@@ -247,12 +247,13 @@ export async function revokeDocumentPermission(data: {
 
 export async function getUserDocuments(
   userId: string,
+  userRole: string,
   page: number,
   limit: number,
 ) {
   const [data, total] = await Promise.all([
-    listDocuments(userId, page, limit),
-    countUserDocuments(userId),
+    listDocuments(userId, userRole, page, limit),
+    countUserDocuments(userId, userRole),
   ]);
 
   return {
