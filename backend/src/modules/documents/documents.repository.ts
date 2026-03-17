@@ -72,6 +72,7 @@ export async function getDocumentPermissions(documentId: number) {
 
 export async function createDocument(data: {
   title: string;
+  description?: string;
   ownerId: string;
   departmentId: number;
 }) {
@@ -79,6 +80,7 @@ export async function createDocument(data: {
     .insert(documents)
     .values({
       title: data.title,
+      description: data.description ?? null,
       ownerId: data.ownerId,
       departmentId: data.departmentId,
     })
@@ -105,7 +107,13 @@ export async function createDocumentVersion(data: {
   });
 }
 
-export async function listDocuments(userId: string) {
+export async function listDocuments(
+  userId: string,
+  page: number,
+  limit: number,
+) {
+  const offset = (page - 1) * limit;
+
   return db
     .selectDistinct()
     .from(documents)
@@ -122,16 +130,16 @@ export async function listDocuments(userId: string) {
         isNull(documents.deletedAt),
         or(
           eq(documents.ownerId, userId),
-
           eq(documentPermissions.userId, userId),
-
           and(
             eq(departmentUsers.userId, userId),
             eq(documentPermissions.departmentId, departmentUsers.departmentId),
           ),
         ),
       ),
-    );
+    )
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function updateDocumentMetadata(

@@ -10,6 +10,7 @@ import {
 import {
   searchUsersSchema,
   departmentUsersSchema,
+  paginationSchema,
 } from "./users.validators.js";
 
 /**
@@ -30,10 +31,18 @@ export async function getMyProfileController(req: Request, res: Response) {
 /**
  * GET /users
  */
-export async function listUsersController(_req: Request, res: Response) {
-  const users = await getAllUsers();
+export async function listUsersController(req: Request, res: Response) {
+  const { page, limit } = paginationSchema.parse(req.query);
 
-  res.json(users);
+  const users = await getAllUsers(page, limit);
+
+  res.json({
+    data: users,
+    meta: {
+      page,
+      limit,
+    },
+  });
 }
 
 /**

@@ -8,49 +8,26 @@ El sistema está construido como una **aplicación web con arquitectura modular*
 
 # Table of Contents
 
-- [Institutional Document Management System (IDMS)](#institutional-document-management-system-idms)
-- [Table of Contents](#table-of-contents)
-- [1. Objetivo del Sistema](#1-objetivo-del-sistema)
-- [2. Tipo de Sistema](#2-tipo-de-sistema)
-  - [Características principales](#características-principales)
-- [3. Usuarios del Sistema](#3-usuarios-del-sistema)
-- [4. Funcionalidades Principales](#4-funcionalidades-principales)
-  - [Autenticación](#autenticación)
-    - [Configuración de sesión](#configuración-de-sesión)
-- [5. Gestión de Documentos](#5-gestión-de-documentos)
-- [6. Versionado de Documentos](#6-versionado-de-documentos)
-- [7. Distribución de Documentos](#7-distribución-de-documentos)
-- [8. Permisos de Documento](#8-permisos-de-documento)
-  - [Permisos disponibles](#permisos-disponibles)
-- [9. Procesamiento de Archivos](#9-procesamiento-de-archivos)
-- [10. Restricciones del Sistema](#10-restricciones-del-sistema)
-  - [Tamaño máximo de archivo](#tamaño-máximo-de-archivo)
-  - [Tipos de archivo soportados](#tipos-de-archivo-soportados)
-- [11. Auditoría](#11-auditoría)
-- [12. Seguridad](#12-seguridad)
-  - [Autenticación](#autenticación-1)
-  - [Sesión](#sesión)
-  - [Cookies seguras](#cookies-seguras)
-- [13. Soft Delete](#13-soft-delete)
-- [14. Arquitectura del Proyecto](#14-arquitectura-del-proyecto)
-- [15. Arquitectura Backend](#15-arquitectura-backend)
-- [16. Arquitectura de Módulos](#16-arquitectura-de-módulos)
-  - [Separación de responsabilidades](#separación-de-responsabilidades)
-- [17. Arquitectura Frontend](#17-arquitectura-frontend)
-- [18. Infraestructura](#18-infraestructura)
-- [19. Base de Datos](#19-base-de-datos)
-  - [Entidades principales](#entidades-principales)
-- [20. Flujo del Sistema](#20-flujo-del-sistema)
-  - [Flujo de autenticación](#flujo-de-autenticación)
-  - [Flujo de subida de documento](#flujo-de-subida-de-documento)
-  - [Flujo de nueva versión](#flujo-de-nueva-versión)
-  - [Flujo de compartir documento](#flujo-de-compartir-documento)
-- [21. Stack Tecnológico](#21-stack-tecnológico)
-  - [Backend](#backend)
-  - [Frontend](#frontend)
-  - [Base de Datos](#base-de-datos)
-  - [Infraestructura](#infraestructura)
-- [22. Estado del Proyecto](#22-estado-del-proyecto)
+1. Objetivo del Sistema
+2. Tipo de Sistema
+3. Usuarios del Sistema
+4. Funcionalidades Principales
+5. Gestión de Documentos
+6. Versionado de Documentos
+7. Distribución de Documentos
+8. Permisos de Documento
+9. Procesamiento Asíncrono de Archivos
+10. Restricciones del Sistema
+11. Seguridad
+12. Soft Delete
+13. Arquitectura del Proyecto
+14. Arquitectura Backend
+15. Arquitectura de Módulos
+16. Infraestructura
+17. Base de Datos
+18. Flujo del Sistema
+19. Stack Tecnológico
+20. Estado del Proyecto
 
 ---
 
@@ -137,7 +114,10 @@ Los usuarios pueden:
 - Crear nuevas versiones
 - Compartir documentos
 
-Los documentos se almacenan en el filesystem y su metadata en la base de datos.
+Los documentos se almacenan en:
+
+- **Filesystem → archivos**
+- **Base de datos → metadata**
 
 ---
 
@@ -181,95 +161,95 @@ Director → Estudiantes
 
 El sistema permite permisos granulares al compartir documentos.
 
-## Permisos disponibles
+Permisos disponibles:
 
-| Permiso        | Descripción                      |
-| -------------- | -------------------------------- |
-| view           | Ver metadatos del documento      |
-| download       | Descargar archivo                |
-| upload_version | Subir nuevas versiones           |
-| edit           | Editar información del documento |
-| share          | Compartir documento              |
-
-Ejemplo:
-
-| Documento  | Destinatario | Permiso        |
-| ---------- | ------------ | -------------- |
-| Reglamento | Profesor     | view           |
-| Reglamento | Dirección    | upload_version |
+| Permiso        | Descripción            |
+| -------------- | ---------------------- |
+| view           | Ver metadatos          |
+| download       | Descargar archivo      |
+| upload_version | Subir nuevas versiones |
+| edit           | Editar documento       |
+| share          | Compartir documento    |
 
 ---
 
-# 9. Procesamiento de Archivos
+# 9. Procesamiento Asíncrono de Archivos
 
-El procesamiento de archivos es **asíncrono**.
+El procesamiento de archivos se realiza mediante **colas de trabajo**.
 
-Tecnologías utilizadas:
+Tecnologías:
 
-- **BullMQ**
-- **Redis**
+- BullMQ
+- Redis
 
 Esto permite:
 
-- mover archivos
-- generar rutas organizadas
-- registrar versiones
 - evitar bloquear la API
+- mover archivos al storage final
+- procesar versiones
+- organizar rutas de almacenamiento
+
+Arquitectura:
+
+```
+Controller
+    ↓
+Service
+    ↓
+Queue (BullMQ)
+    ↓
+Worker
+    ↓
+Storage filesystem
+```
 
 ---
 
 # 10. Restricciones del Sistema
 
-## Tamaño máximo de archivo
+## Tamaño máximo
 
 ```
-50 MB
+20MB
 ```
 
-## Tipos de archivo soportados
+## Tipos soportados actualmente
 
 - PDF
-- Word
-- Excel
-- PowerPoint
+
+## Tipos planificados (próximas versiones)
+
+- Word (.docx)
+- Excel (.xlsx)
+- PowerPoint (.pptx)
 
 ---
 
-# 11. Auditoría
-
-La auditoría completa **no está implementada en esta versión**.
-
-Se implementará en futuros sprints mediante:
-
-- activity logs
-- historial de documentos
-- seguimiento de acciones de usuarios
-
----
-
-# 12. Seguridad
+# 11. Seguridad
 
 Medidas implementadas:
 
-## Autenticación
+### Autenticación
 
 Google OAuth
 
-## Sesión
+### Sesión
 
-JWT
+JWT en cookie segura
 
-## Cookies seguras
+### Cookies
 
-- `httpOnly`
-- `secure`
-- `sameSite=strict`
+```
+httpOnly
+secure
+sameSite=strict
+```
 
 ---
 
-# 13. Soft Delete
+# 12. Soft Delete
 
-Los documentos utilizan **soft delete** para evitar pérdida de información.
+Los documentos utilizan **soft delete**.
 
 En lugar de eliminar registros permanentemente:
 
@@ -286,201 +266,172 @@ Esto permite:
 
 ---
 
-# 14. Arquitectura del Proyecto
+# 13. Arquitectura del Proyecto
 
 El proyecto utiliza un **monorepo**.
 
 ```
-institution-docs-system
+intranet-documents-upqroo
 │
 ├── backend
 ├── frontend
 ├── docker
 ├── docs
 ├── scripts
+├── storage
 │
-├── docker-compose.yml
-├── pnpm-workspace.yaml
-└── README.md
+├── README.md
+└── .gitignore
 ```
-
-Repositorio:
-
-- GitHub private
-- Monorepo
 
 ---
 
-# 15. Arquitectura Backend
+# 14. Arquitectura Backend
 
 ```
 backend
 │
 ├── src
 │
-│   ├── modules
-│   │
-│   │   ├── auth
-│   │   ├── users
-│   │   ├── departments
-│   │   └── documents
+├── config
+│   ├── env.ts
+│   └── redis.ts
 │
-│   ├── infrastructure
-│   │
-│   │   ├── database
-│   │   ├── redis
-│   │   ├── queues
-│   │   ├── workers
-│   │   └── storage
+├── infrastructure
 │
-│   ├── middleware
-│   ├── utils
-│   ├── types
+│   ├── database
+│   │   ├── migrations
+│   │   ├── schema
+│   │   ├── drizzle.ts
+│   │   ├── relations.ts
+│   │   └── connection.ts
 │
-│   └── server.ts
+│   ├── queues
+│   │   └── document.queue.ts
 │
-├── storage
-├── tmp
-└── tests
+│   ├── workers
+│   │   └── document.worker.ts
+│
+│   └── storage
+│       └── store.service.ts
+│
+├── middleware
+│
+├── modules
+│   ├── auth
+│   ├── users
+│   ├── departments
+│   └── documents
+│
+├── types
+├── utils
+│
+├── server.ts
+└── worker.ts
 ```
 
 ---
 
-# 16. Arquitectura de Módulos
+# 15. Arquitectura de Módulos
 
 Ejemplo del módulo `documents`.
 
 ```
 documents
 │
-├── document.routes.ts
-├── document.controller.ts
-├── document.service.ts
-├── document.repository.ts
-├── document.domain.ts
-├── document.validators.ts
-└── document.types.ts
+├── documents.routes.ts
+├── documents.controller.ts
+├── documents.service.ts
+├── documents.repository.ts
+├── documents.domain.ts
+├── documents.validators.ts
+└── documents.types.ts
 ```
 
-## Separación de responsabilidades
+Separación de responsabilidades:
 
-| Capa       | Responsabilidad         |
-| ---------- | ----------------------- |
-| routes     | Definición de endpoints |
-| controller | Manejo HTTP             |
-| service    | Lógica de aplicación    |
-| domain     | Reglas de negocio       |
-| repository | Acceso a base de datos  |
+| Capa       | Responsabilidad        |
+| ---------- | ---------------------- |
+| routes     | endpoints              |
+| controller | manejo HTTP            |
+| service    | lógica de aplicación   |
+| domain     | reglas de negocio      |
+| repository | acceso a base de datos |
 
 ---
 
-# 17. Arquitectura Frontend
-
-```
-frontend
-│
-├── src
-│
-│   ├── api
-│   ├── store
-│   ├── pages
-│   ├── components
-│   ├── features
-│   ├── hooks
-│   ├── layouts
-│   └── types
-│
-├── public
-└── vite.config.ts
-```
-
----
-
-# 18. Infraestructura
+# 16. Infraestructura
 
 Infraestructura basada en **Docker**.
 
-Servicios principales:
+Servicios:
 
 - MySQL
 - Redis
 - Backend
 - Frontend
 
-Orquestación mediante:
+Configuración mediante:
 
 ```
 docker-compose
 ```
 
+Estructura:
+
+```
+docker
+│
+└── mysql
+    └── init
+        └── schema.sql
+```
+
 ---
 
-# 19. Base de Datos
+# 17. Base de Datos
 
-El sistema utiliza **MySQL 8**.
+Base de datos:
 
-## Entidades principales
+```
+MySQL 8
+```
+
+Entidades principales:
 
 - `users`
 - `departments`
-- `department_users`
+- `departments_users`
 - `documents`
 - `document_versions`
-- `document_shares`
-
-Capacidad estimada:
-
-- 2000 usuarios
-- 100k documentos
-- 300k versiones
+- `document_permissions`
 
 ---
 
-# 20. Flujo del Sistema
-
-## Flujo de autenticación
-
-1. Usuario accede al sistema
-2. Selecciona **Login with Google**
-3. Google OAuth autentica al usuario
-4. Google devuelve `id_token`
-5. Frontend envía token al backend
-
-```
-POST /auth/google
-```
-
-1. Backend valida token
-2. Verifica usuario en base de datos
-3. Genera JWT
-4. Envía cookie segura
-5. Usuario queda autenticado
-
----
+# 18. Flujo del Sistema
 
 ## Flujo de subida de documento
-
-1. Usuario selecciona archivo
-2. Frontend envía request
 
 ```
 POST /documents
 ```
 
-1. Express recibe request
-2. `multer` guarda archivo temporalmente
+Proceso:
+
+1. Usuario sube archivo
+2. `multer` guarda temporalmente
 
 ```
 /tmp/uploads
 ```
 
-1. Service crea registro en `documents`
-2. Se crea versión inicial en `document_versions`
-3. Se envía job a BullMQ
-4. Worker procesa archivo
-5. Archivo se mueve a storage
+3. Service crea registro en `documents`
+4. Se crea versión inicial en `document_versions`
+5. Se envía job a **BullMQ**
+6. Worker procesa archivo
+7. Archivo se mueve a **storage**
 
-Ejemplo:
+Ejemplo de ruta final:
 
 ```
 /storage/docs/9f/20/9f20ab91/v1.pdf
@@ -494,16 +445,17 @@ Ejemplo:
 POST /documents/:id/version
 ```
 
-1. Se sube archivo
-2. Service calcula nueva versión
+Proceso:
+
+1. Usuario sube archivo
+2. Service calcula versión
 
 ```
 max(version) + 1
 ```
 
-1. Se registra en `document_versions`
-2. Worker procesa archivo
-3. Se guarda como `v2.pdf`
+3. Se registra en `document_versions`
+4. Worker mueve archivo al storage
 
 ---
 
@@ -513,18 +465,21 @@ max(version) + 1
 POST /documents/:id/share
 ```
 
+Proceso:
+
 1. Usuario selecciona destinatarios
-2. Backend crea registros en `document_shares`
-3. Usuarios o departamentos obtienen acceso al documento
+2. Backend crea permisos en `document_permissions`
+3. Usuarios o departamentos obtienen acceso
 
 ---
 
-# 21. Stack Tecnológico
+# 19. Stack Tecnológico
 
 ## Backend
 
 - Node.js
 - Express
+- TypeScript
 - Drizzle ORM
 - BullMQ
 - Redis
@@ -545,15 +500,26 @@ POST /documents/:id/share
 
 ---
 
-# 22. Estado del Proyecto
+# 20. Estado del Proyecto
 
-Arquitectura final del sistema:
+Estado actual:
 
-- Modular
-- Domain-driven design (light)
-- Procesamiento asíncrono de archivos
-- REST API
-- Monorepo
-- Dockerized infrastructure
+Implementado:
 
----
+- Arquitectura modular
+- Base de datos MySQL
+- Esquemas con Drizzle
+- Subida de documentos
+- Versionado
+- Sistema de permisos
+- Procesamiento asíncrono con BullMQ
+- Workers para manejo de archivos
+- Almacenamiento en filesystem
+- Docker para infraestructura
+
+En progreso:
+
+- Integración completa de autenticación Google OAuth
+- Endpoints finales de documentos
+- Pruebas automatizadas
+- Auditoría de acciones

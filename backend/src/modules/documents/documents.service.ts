@@ -8,7 +8,6 @@ import { documents } from "../../infrastructure/database/schema/documents.schema
 
 import {
   createDocument,
-  createDocumentVersion,
   getDocumentById,
   getDocumentPermissions,
   grantUserPermission,
@@ -29,9 +28,11 @@ export async function createNewDocument(
   title: string,
   userId: string,
   departmentId: number,
+  description?: string,
 ) {
   const documentId = await createDocument({
     title,
+    description,
     ownerId: userId,
     departmentId,
   });
@@ -53,7 +54,7 @@ export async function queueDocumentUpload(data: {
       tmpPath: data.tmpPath,
       mimeType: data.mimeType,
       size: data.fileSize,
-      uploadedBy: Number(data.uploadedBy),
+      uploadedBy: data.uploadedBy,
     },
     {
       jobId: `document-upload-${data.documentId}-${Date.now()}`,
@@ -76,7 +77,8 @@ export async function storeDocumentFile(data: {
         maxVersion: sql<number>`MAX(${documentVersions.version})`,
       })
       .from(documentVersions)
-      .where(eq(documentVersions.documentId, data.documentId));
+      .where(eq(documentVersions.documentId, data.documentId))
+      .for("update");
 
     const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
 
@@ -102,6 +104,8 @@ export async function storeDocumentFile(data: {
       })
       .where(eq(documents.id, data.documentId));
   });
+
+  await fs.unlink(data.tmpPath).catch(() => null);
 }
 
 export async function updateDocument(
@@ -165,8 +169,12 @@ export async function revokeDocumentPermission(data: {
   await revokePermission(data);
 }
 
-export async function getUserDocuments(userId: string) {
-  return listDocuments(userId);
+export async function getUserDocuments(
+  userId: string,
+  page: number,
+  limit: number,
+) {
+  return listDocuments(userId, page, limit);
 }
 
 export async function searchUserDocuments(userId: string, query: string) {

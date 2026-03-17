@@ -17,6 +17,10 @@ if (!fs.existsSync(TMP_DIR)) {
   fs.mkdirSync(TMP_DIR, { recursive: true });
 }
 
+// TODO: Cuando se habiliten más tipos, agregar aquí:
+// "application/vnd.openxmlformats-officedocument.wordprocessingml.document" → .docx
+// "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" → .xlsx
+// "application/vnd.openxmlformats-officedocument.presentationml.presentation" → .pptx
 const allowedMimeTypes = ["application/pdf"];
 
 const allowedExtensions = [".pdf"];

@@ -9,7 +9,7 @@ COLLATE utf8mb4_unicode_ci;
 USE `intranet-upqroo`;
 
 -- ===============================
--- USERS (UUID)
+-- USERS
 -- ===============================
 
 CREATE TABLE users (
@@ -19,6 +19,8 @@ CREATE TABLE users (
     email VARCHAR(150) NOT NULL UNIQUE,
     name VARCHAR(150) NOT NULL,
     avatar_url TEXT,
+
+    is_admin TINYINT(1) NOT NULL DEFAULT 0,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

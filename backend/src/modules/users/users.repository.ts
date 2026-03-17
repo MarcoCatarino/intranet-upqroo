@@ -14,7 +14,9 @@ export async function findUserById(userId: string) {
   return result[0] ?? null;
 }
 
-export async function listUsers() {
+export async function listUsers(page: number, limit: number) {
+  const offset = (page - 1) * limit;
+
   return db
     .select({
       id: users.id,
@@ -22,7 +24,9 @@ export async function listUsers() {
       name: users.name,
       avatarUrl: users.avatarUrl,
     })
-    .from(users);
+    .from(users)
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function searchUsers(query: string) {
