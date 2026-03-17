@@ -19,6 +19,8 @@ export const documentVersions = mysqlTable("document_versions", {
 
   fileSize: bigint("file_size", { mode: "number" }).notNull(),
 
+  fileHash: varchar("file_hash", { length: 64 }),
+
   uploadedBy: varchar("uploaded_by", { length: 36 }).notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),

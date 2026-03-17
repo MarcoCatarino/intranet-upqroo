@@ -117,6 +117,8 @@ CREATE TABLE document_versions (
 
     mime_type VARCHAR(120),
 
+    file_hash CHAR(64),
+
     uploaded_by CHAR(36) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -124,6 +126,7 @@ CREATE TABLE document_versions (
     UNIQUE KEY uniq_document_version (document_id, version),
 
     INDEX idx_document_versions_document (document_id),
+    INDEX idx_document_versions_hash (file_hash),
 
     CONSTRAINT fk_dv_document
         FOREIGN KEY (document_id)
