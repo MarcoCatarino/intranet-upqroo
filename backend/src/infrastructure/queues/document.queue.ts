@@ -8,7 +8,7 @@ export interface DocumentProcessingJob {
   mimeType: string;
   size: number;
 
-  uploadedBy: number;
+  uploadedBy: string;
 }
 
 export const documentQueue = new Queue<DocumentProcessingJob>(

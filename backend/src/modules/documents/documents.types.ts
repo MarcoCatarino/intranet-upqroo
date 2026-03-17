@@ -1,5 +1,6 @@
 export interface CreateDocumentInput {
   title: string;
+  description?: string;
   departmentId: number;
 }
 

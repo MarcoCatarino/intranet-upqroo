@@ -6,6 +6,7 @@ import { documentVersions } from "../../infrastructure/database/schema/document_
 
 import {
   createDocumentSchema,
+  paginationSchema,
   revokePermissionSchema,
   shareDocumentSchema,
   updateDocumentSchema,
@@ -35,6 +36,7 @@ export async function createDocumentController(req: Request, res: Response) {
     data.title,
     req.user!.id,
     data.departmentId,
+    data.description,
   );
 
   res.json({
@@ -96,9 +98,17 @@ export async function documentPermissionsController(
 }
 
 export async function listDocumentsController(req: Request, res: Response) {
-  const docs = await getUserDocuments(req.user!.id);
+  const { page, limit } = paginationSchema.parse(req.query);
 
-  res.json(docs);
+  const docs = await getUserDocuments(req.user!.id, page, limit);
+
+  res.json({
+    data: docs,
+    meta: {
+      page,
+      limit,
+    },
+  });
 }
 
 export async function getDocumentController(req: Request, res: Response) {
