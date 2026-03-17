@@ -2,7 +2,10 @@ import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
 import type { AuthUser } from "./auth.types.js";
-import { validateInstitutionEmail } from "./auth.domain.js";
+import {
+  validateInstitutionEmail,
+  resolveRoleFromEmail,
+} from "./auth.domain.js";
 import { findUserByGoogleId, createUser } from "./auth.repository.js";
 
 import { env } from "../../config/env.js";
@@ -28,10 +31,14 @@ export async function loginWithGoogle(token: string) {
   let user: AuthUser;
 
   if (!dbUser) {
+    // Asigna rol automáticamente según el email
+    const role = resolveRoleFromEmail(payload.email!);
+
     const userId = await createUser({
       googleId: payload.sub,
       email: payload.email!,
       name: payload.name!,
+      role,
       avatarUrl: payload.picture,
     });
 
@@ -39,12 +46,14 @@ export async function loginWithGoogle(token: string) {
       id: userId,
       email: payload.email!,
       name: payload.name!,
+      role,
     };
   } else {
     user = {
       id: dbUser.id,
       email: dbUser.email,
       name: dbUser.name,
+      role: dbUser.role as AuthUser["role"],
     };
   }
 
@@ -52,6 +61,7 @@ export async function loginWithGoogle(token: string) {
     {
       userId: user.id,
       email: user.email,
+      role: user.role,
     },
     env.AUTH.JWT_SECRET,
     {
