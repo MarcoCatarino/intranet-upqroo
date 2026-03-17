@@ -17,7 +17,6 @@ import {
   formatDateTime,
   canUploadDocuments,
   canShareDocuments,
-  cn,
 } from "@/lib/utils";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type { Document } from "@/types";
