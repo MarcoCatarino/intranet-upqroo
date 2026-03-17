@@ -102,15 +102,9 @@ export async function documentPermissionsController(
 export async function listDocumentsController(req: Request, res: Response) {
   const { page, limit } = paginationSchema.parse(req.query);
 
-  const docs = await getUserDocuments(req.user!.id, page, limit);
+  const result = await getUserDocuments(req.user!.id, page, limit);
 
-  res.json({
-    data: docs,
-    meta: {
-      page,
-      limit,
-    },
-  });
+  res.json(result);
 }
 
 export async function getDocumentController(req: Request, res: Response) {
