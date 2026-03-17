@@ -7,6 +7,7 @@ import { documentPermissions } from "./schema/document_permissions.schema.js";
 import { departments } from "./schema/departments.schema.js";
 import { documents } from "./schema/documents.schema.js";
 import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
+import { professorUploadPermissions } from "./schema/professor_upload_permissions.schema.js";
 
 /* =========================
    USERS
@@ -14,20 +15,24 @@ import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
 
 export const usersRelations = relations(users, ({ many }) => ({
   departments: many(departmentUsers),
-
   uploadedDocuments: many(documentVersions),
-
   grantedPermissions: many(documentPermissions),
+  uploadPermissions: many(professorUploadPermissions),
 }));
 
 /* =========================
    DEPARTMENTS
 ========================= */
 
-export const departmentsRelations = relations(departments, ({ many }) => ({
+export const departmentsRelations = relations(departments, ({ one, many }) => ({
   users: many(departmentUsers),
-
   documents: many(documents),
+  children: many(departments, { relationName: "parent" }),
+  parent: one(departments, {
+    fields: [departments.parentId],
+    references: [departments.id],
+    relationName: "parent",
+  }),
 }));
 
 /* =========================
@@ -41,9 +46,30 @@ export const departmentUsersRelations = relations(
       fields: [departmentUsers.departmentId],
       references: [departments.id],
     }),
-
     user: one(users, {
       fields: [departmentUsers.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
+   PROFESSOR UPLOAD PERMISSIONS
+========================= */
+
+export const professorUploadPermissionsRelations = relations(
+  professorUploadPermissions,
+  ({ one }) => ({
+    professor: one(users, {
+      fields: [professorUploadPermissions.professorId],
+      references: [users.id],
+    }),
+    department: one(departments, {
+      fields: [professorUploadPermissions.departmentId],
+      references: [departments.id],
+    }),
+    grantedByUser: one(users, {
+      fields: [professorUploadPermissions.grantedBy],
       references: [users.id],
     }),
   }),
@@ -58,16 +84,12 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
     fields: [documents.ownerId],
     references: [users.id],
   }),
-
   department: one(departments, {
     fields: [documents.departmentId],
     references: [departments.id],
   }),
-
   versions: many(documentVersions),
-
   permissions: many(documentPermissions),
-
   auditLogs: many(documentAuditLogs),
 }));
 
@@ -82,7 +104,6 @@ export const documentVersionsRelations = relations(
       fields: [documentVersions.documentId],
       references: [documents.id],
     }),
-
     uploader: one(users, {
       fields: [documentVersions.uploadedBy],
       references: [users.id],
@@ -101,17 +122,14 @@ export const documentPermissionsRelations = relations(
       fields: [documentPermissions.documentId],
       references: [documents.id],
     }),
-
     user: one(users, {
       fields: [documentPermissions.userId],
       references: [users.id],
     }),
-
     department: one(departments, {
       fields: [documentPermissions.departmentId],
       references: [departments.id],
     }),
-
     grantedByUser: one(users, {
       fields: [documentPermissions.grantedBy],
       references: [users.id],
@@ -130,7 +148,6 @@ export const documentAuditLogsRelations = relations(
       fields: [documentAuditLogs.documentId],
       references: [documents.id],
     }),
-
     user: one(users, {
       fields: [documentAuditLogs.userId],
       references: [users.id],
