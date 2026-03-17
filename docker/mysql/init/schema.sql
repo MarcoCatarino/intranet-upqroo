@@ -20,11 +20,13 @@ CREATE TABLE users (
     name VARCHAR(150) NOT NULL,
     avatar_url TEXT,
 
-    is_admin TINYINT(1) NOT NULL DEFAULT 0,
+    -- Roles: admin, secretary, director, professor, student
+    role VARCHAR(20) NOT NULL DEFAULT 'student',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX idx_users_email (email)
+    INDEX idx_users_email (email),
+    INDEX idx_users_role (role)
 );
 
 -- ===============================
@@ -35,9 +37,19 @@ CREATE TABLE departments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
     name VARCHAR(120) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    -- NULL = es una Secretaría raíz
+    -- ID = es un departamento hijo de esa Secretaría
+    parent_id INT UNSIGNED NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_departments_parent
+        FOREIGN KEY (parent_id)
+        REFERENCES departments(id)
+        ON DELETE SET NULL
 );
 
 -- ===============================
@@ -61,6 +73,34 @@ CREATE TABLE department_users (
     CONSTRAINT fk_du_department
         FOREIGN KEY (department_id)
         REFERENCES departments(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
+-- PROFESSOR UPLOAD PERMISSIONS
+-- ===============================
+
+CREATE TABLE professor_upload_permissions (
+    professor_id CHAR(36) NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
+    granted_by CHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (professor_id, department_id),
+
+    CONSTRAINT fk_pup_professor
+        FOREIGN KEY (professor_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_pup_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_pup_granted_by
+        FOREIGN KEY (granted_by)
+        REFERENCES users(id)
         ON DELETE CASCADE
 );
 
@@ -117,6 +157,8 @@ CREATE TABLE document_versions (
 
     mime_type VARCHAR(120),
 
+    file_hash CHAR(64),
+
     uploaded_by CHAR(36) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -124,6 +166,7 @@ CREATE TABLE document_versions (
     UNIQUE KEY uniq_document_version (document_id, version),
 
     INDEX idx_document_versions_document (document_id),
+    INDEX idx_document_versions_hash (file_hash),
 
     CONSTRAINT fk_dv_document
         FOREIGN KEY (document_id)

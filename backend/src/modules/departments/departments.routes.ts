@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { adminMiddleware } from "../../middleware/admin.middleware.js";
+import { roleMiddleware } from "../../middleware/admin.middleware.js";
 
 import {
   createDepartmentController,
@@ -10,55 +10,69 @@ import {
   addUserController,
   removeUserController,
   departmentUsersController,
+  grantProfessorUploadController,
+  revokeProfessorUploadController,
 } from "./departments.controller.js";
 
 const router = Router();
 
 /*
 |--------------------------------------------------------------------------
-| Departments — Lectura (cualquier usuario autenticado)
+| Lectura — cualquier usuario autenticado
 |--------------------------------------------------------------------------
 */
 
-/**
- * GET /departments
- */
 router.get("/", authMiddleware, listDepartmentsController);
 
-/**
- * GET /departments/:departmentId
- */
 router.get("/:departmentId", authMiddleware, departmentController);
 
-/**
- * GET /departments/:departmentId/users
- */
 router.get("/:departmentId/users", authMiddleware, departmentUsersController);
 
 /*
 |--------------------------------------------------------------------------
-| Departments — Escritura (solo admin)
+| Escritura — solo admin
 |--------------------------------------------------------------------------
 */
 
-/**
- * POST /departments
- */
-router.post("/", authMiddleware, adminMiddleware, createDepartmentController);
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware("admin"),
+  createDepartmentController,
+);
 
-/**
- * POST /departments/users
- */
-router.post("/users", authMiddleware, adminMiddleware, addUserController);
+router.post(
+  "/users",
+  authMiddleware,
+  roleMiddleware("admin"),
+  addUserController,
+);
 
-/**
- * DELETE /departments/:departmentId/user/:userId
- */
 router.delete(
   "/:departmentId/user/:userId",
   authMiddleware,
-  adminMiddleware,
+  roleMiddleware("admin"),
   removeUserController,
+);
+
+/*
+|--------------------------------------------------------------------------
+| Permisos de subida para profesores — admin o director
+|--------------------------------------------------------------------------
+*/
+
+router.post(
+  "/:departmentId/professor-upload/:professorId",
+  authMiddleware,
+  roleMiddleware("admin", "director"),
+  grantProfessorUploadController,
+);
+
+router.delete(
+  "/:departmentId/professor-upload/:professorId",
+  authMiddleware,
+  roleMiddleware("admin", "director"),
+  revokeProfessorUploadController,
 );
 
 export default router;

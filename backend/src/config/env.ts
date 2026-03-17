@@ -31,4 +31,8 @@ export const env = {
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT,
   },
+
+  DOCUMENTS: {
+    MAX_VERSIONS: Number(process.env.MAX_DOCUMENT_VERSIONS) || 20,
+  },
 } as const;

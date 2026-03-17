@@ -1,4 +1,5 @@
 import "express";
+import { UserRole } from "../infrastructure/database/schema/users.schema.js";
 
 declare global {
   namespace Express {
@@ -6,6 +7,7 @@ declare global {
       user?: {
         id: string;
         email: string;
+        role?: UserRole;
       };
     }
   }

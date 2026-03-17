@@ -5,11 +5,14 @@ import {
   addUserToDepartment,
   removeUserFromDepartment,
   listUsersInDepartment,
+  insertProfessorUploadPermission,
+  deleteProfessorUploadPermission,
 } from "./departments.repository.js";
 
 export async function createDepartmentService(data: {
   name: string;
   slug: string;
+  parentId?: number;
 }) {
   return createDepartment(data);
 }
@@ -36,4 +39,19 @@ export async function removeUserService(departmentId: number, userId: string) {
 
 export async function usersInDepartment(departmentId: number) {
   return listUsersInDepartment(departmentId);
+}
+
+export async function grantProfessorUploadService(data: {
+  professorId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return insertProfessorUploadPermission(data);
+}
+
+export async function revokeProfessorUploadService(data: {
+  professorId: string;
+  departmentId: number;
+}) {
+  return deleteProfessorUploadPermission(data);
 }

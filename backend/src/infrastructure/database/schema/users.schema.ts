@@ -1,9 +1,11 @@
-import {
-  mysqlTable,
-  varchar,
-  timestamp,
-  tinyint,
-} from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, timestamp } from "drizzle-orm/mysql-core";
+
+export type UserRole =
+  | "admin"
+  | "secretary"
+  | "director"
+  | "professor"
+  | "student";
 
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
@@ -16,7 +18,7 @@ export const users = mysqlTable("users", {
 
   avatarUrl: varchar("avatar_url", { length: 255 }),
 
-  isAdmin: tinyint("is_admin").notNull().default(0),
+  role: varchar("role", { length: 20 }).notNull().default("student"),
 
   createdAt: timestamp("created_at").defaultNow(),
 });

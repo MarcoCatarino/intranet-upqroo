@@ -7,5 +7,7 @@ export const departments = mysqlTable("departments", {
 
   slug: varchar("slug", { length: 100 }).notNull().unique(),
 
+  parentId: bigint("parent_id", { mode: "number" }),
+
   createdAt: timestamp("created_at").defaultNow(),
 });

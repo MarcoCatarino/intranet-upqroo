@@ -30,6 +30,8 @@ import {
   insertAuditLog,
   getAuditLogsForDocument,
 } from "./documents.audit.repository.js";
+import { env } from "../../config/env.js";
+import { calculateFileHash } from "../../infrastructure/storage/hash.service.js";
 
 export async function createNewDocument(
   title: string,
@@ -95,14 +97,28 @@ export async function storeDocumentFile(data: {
 }) {
   await ensureDocumentFolder(data.documentId);
 
+  const fileHash = await calculateFileHash(data.tmpPath);
+
   await db.transaction(async (tx) => {
     const result = await tx
       .select({
         maxVersion: sql<number>`MAX(${documentVersions.version})`,
+        versionCount: sql<number>`COUNT(${documentVersions.id})`,
       })
       .from(documentVersions)
       .where(eq(documentVersions.documentId, data.documentId))
       .for("update");
+
+    const currentCount = result[0]?.versionCount ?? 0;
+    const maxVersions = env.DOCUMENTS.MAX_VERSIONS;
+
+    if (currentCount >= maxVersions) {
+      await fs.unlink(data.tmpPath).catch(() => null);
+
+      throw new Error(
+        `Document has reached the maximum of ${maxVersions} versions`,
+      );
+    }
 
     const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
 
@@ -118,6 +134,7 @@ export async function storeDocumentFile(data: {
       filePath: finalPath,
       mimeType: data.mimeType,
       fileSize: data.fileSize,
+      fileHash,
       uploadedBy: data.uploadedBy,
     });
 
@@ -230,12 +247,13 @@ export async function revokeDocumentPermission(data: {
 
 export async function getUserDocuments(
   userId: string,
+  userRole: string,
   page: number,
   limit: number,
 ) {
   const [data, total] = await Promise.all([
-    listDocuments(userId, page, limit),
-    countUserDocuments(userId),
+    listDocuments(userId, userRole, page, limit),
+    countUserDocuments(userId, userRole),
   ]);
 
   return {
