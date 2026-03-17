@@ -9,8 +9,8 @@ export async function getUserProfile(userId: string) {
   return findUserById(userId);
 }
 
-export async function getAllUsers() {
-  return listUsers();
+export async function getAllUsers(page: number, limit: number) {
+  return listUsers(page, limit);
 }
 
 export async function searchUser(query: string) {

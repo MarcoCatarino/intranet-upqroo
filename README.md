@@ -210,15 +210,18 @@ Storage filesystem
 ## Tamaño máximo
 
 ```
-50MB
+20MB
 ```
 
-## Tipos soportados
+## Tipos soportados actualmente
 
 - PDF
-- Word
-- Excel
-- PowerPoint
+
+## Tipos planificados (próximas versiones)
+
+- Word (.docx)
+- Excel (.xlsx)
+- PowerPoint (.pptx)
 
 ---
 

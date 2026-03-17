@@ -1,25 +1,23 @@
 import {
   mysqlTable,
-  int,
+  bigint,
   text,
   varchar,
   timestamp,
 } from "drizzle-orm/mysql-core";
 
-// BigInt -> Int 
-
 export const documentVersions = mysqlTable("document_versions", {
-  id: int("id").primaryKey().autoincrement(),
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
 
-  documentId: int("document_id").notNull(),
+  documentId: bigint("document_id", { mode: "number" }).notNull(),
 
-  version: int("version").notNull(),
+  version: bigint("version", { mode: "number" }).notNull(),
 
   filePath: text("file_path").notNull(),
 
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
 
-  fileSize: int("file_size").notNull(),
+  fileSize: bigint("file_size", { mode: "number" }).notNull(),
 
   uploadedBy: varchar("uploaded_by", { length: 36 }).notNull(),
 

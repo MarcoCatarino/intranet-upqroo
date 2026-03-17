@@ -6,6 +6,7 @@ import { documentVersions } from "./schema/document_versions.schema.js";
 import { documentPermissions } from "./schema/document_permissions.schema.js";
 import { departments } from "./schema/departments.schema.js";
 import { documents } from "./schema/documents.schema.js";
+import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
 
 /* =========================
    USERS
@@ -66,6 +67,8 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
   versions: many(documentVersions),
 
   permissions: many(documentPermissions),
+
+  auditLogs: many(documentAuditLogs),
 }));
 
 /* =========================
@@ -111,6 +114,25 @@ export const documentPermissionsRelations = relations(
 
     grantedByUser: one(users, {
       fields: [documentPermissions.grantedBy],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
+   DOCUMENT AUDIT LOGS
+========================= */
+
+export const documentAuditLogsRelations = relations(
+  documentAuditLogs,
+  ({ one }) => ({
+    document: one(documents, {
+      fields: [documentAuditLogs.documentId],
+      references: [documents.id],
+    }),
+
+    user: one(users, {
+      fields: [documentAuditLogs.userId],
       references: [users.id],
     }),
   }),

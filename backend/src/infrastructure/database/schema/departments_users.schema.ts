@@ -1,9 +1,20 @@
-import { mysqlTable, bigint, varchar } from "drizzle-orm/mysql-core";
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  primaryKey,
+} from "drizzle-orm/mysql-core";
 
-export const departmentUsers = mysqlTable("department_users", {
-  departmentId: bigint("department_id", { mode: "number" }).notNull(),
+export const departmentUsers = mysqlTable(
+  "department_users",
+  {
+    departmentId: bigint("department_id", { mode: "number" }).notNull(),
 
-  userId: varchar("user_id", { length: 36 }).notNull(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
 
-  role: varchar("role", { length: 50 }).notNull(),
-});
+    role: varchar("role", { length: 50 }).notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.departmentId] }),
+  }),
+);

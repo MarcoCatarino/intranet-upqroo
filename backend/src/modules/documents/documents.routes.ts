@@ -9,6 +9,7 @@ import {
   deleteDocumentController,
   documentPermissionsController,
   downloadDocumentController,
+  getAuditLogsController,
   getDocumentController,
   listDocumentsController,
   revokePermissionController,
@@ -24,15 +25,50 @@ const router = Router();
 
 /*
 |--------------------------------------------------------------------------
-| DOCUMENTS
+| DOCUMENTS — Rutas estáticas primero
 |--------------------------------------------------------------------------
 */
-
-router.post("/", authMiddleware, createDocumentController);
 
 router.get("/", authMiddleware, listDocumentsController);
 
 router.get("/search", authMiddleware, searchDocumentsController);
+
+router.post("/", authMiddleware, createDocumentController);
+
+/*
+|--------------------------------------------------------------------------
+| VERSIONS & UPLOAD — Rutas estáticas antes de /:documentId
+|--------------------------------------------------------------------------
+*/
+
+router.post(
+  "/upload",
+  authMiddleware,
+  documentRoleMiddleware("upload_version"),
+  uploadMiddleware.single("file"),
+  uploadDocumentController,
+);
+
+/*
+|--------------------------------------------------------------------------
+| SHARING — Rutas estáticas antes de /:documentId
+|--------------------------------------------------------------------------
+*/
+
+router.post(
+  "/share",
+  authMiddleware,
+  documentRoleMiddleware("share"),
+  shareDocumentController,
+);
+
+router.post("/retry-failed", authMiddleware, retryFailedJobsController);
+
+/*
+|--------------------------------------------------------------------------
+| DOCUMENTS — Rutas dinámicas con /:documentId
+|--------------------------------------------------------------------------
+*/
 
 router.get(
   "/:documentId",
@@ -55,24 +91,18 @@ router.delete(
   deleteDocumentController,
 );
 
-/*
-|--------------------------------------------------------------------------
-| SHARING
-|--------------------------------------------------------------------------
-*/
+router.get(
+  "/:documentId/versions",
+  authMiddleware,
+  documentRoleMiddleware("view"),
+  versionsController,
+);
 
 router.get(
   "/:documentId/permissions",
   authMiddleware,
   documentRoleMiddleware("share"),
   documentPermissionsController,
-);
-
-router.post(
-  "/share",
-  authMiddleware,
-  documentRoleMiddleware("share"),
-  shareDocumentController,
 );
 
 router.delete(
@@ -82,27 +112,11 @@ router.delete(
   revokePermissionController,
 );
 
-router.post("/retry-failed", retryFailedJobsController);
-
-/*
-|--------------------------------------------------------------------------
-| VERSIONS
-|--------------------------------------------------------------------------
-*/
-
-router.post(
-  "/upload",
-  authMiddleware,
-  documentRoleMiddleware("upload_version"),
-  uploadMiddleware.single("file"),
-  uploadDocumentController,
-);
-
 router.get(
-  "/:documentId/versions",
+  "/:documentId/audit",
   authMiddleware,
   documentRoleMiddleware("view"),
-  versionsController,
+  getAuditLogsController,
 );
 
 /*
