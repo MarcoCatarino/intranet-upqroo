@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
+import fs from "node:fs/promises";
 import { redisConnection } from "../../config/redis.js";
 import { DocumentProcessingJob } from "../queues/document.queue.js";
-
 import { storeDocumentFile } from "../../modules/documents/documents.service.js";
 
 export const documentWorker = new Worker<DocumentProcessingJob>(
@@ -10,7 +10,9 @@ export const documentWorker = new Worker<DocumentProcessingJob>(
     try {
       const { documentId, tmpPath, mimeType, size, uploadedBy } = job.data;
 
-      console.log("Processing document job");
+      console.log(
+        `Processing document job ${job.id} for document ${documentId}`,
+      );
 
       await storeDocumentFile({
         documentId,
@@ -21,7 +23,6 @@ export const documentWorker = new Worker<DocumentProcessingJob>(
       });
     } catch (error) {
       console.error("Document worker error:", error);
-
       throw error;
     }
   },
@@ -31,12 +32,17 @@ export const documentWorker = new Worker<DocumentProcessingJob>(
   },
 );
 
-// Status
-
+// Job completado correctamente
 documentWorker.on("completed", (job) => {
   console.log(`Document job ${job.id} completed`);
 });
 
+// Job falló en un intento pero aún tiene reintentos
 documentWorker.on("failed", (job, err) => {
-  console.error(`Document job ${job?.id} failed`, err);
+  console.error(`Document job ${job?.id} failed attempt`, err.message);
+});
+
+// Job agotó todos los intentos — limpia el archivo temporal
+documentWorker.on("error", (err) => {
+  console.error("Worker error:", err);
 });
