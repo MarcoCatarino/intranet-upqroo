@@ -22,12 +22,14 @@ import {
   getDocument,
   updateDocument,
   searchUserDocuments,
+  getDocumentAuditLogs,
 } from "./documents.service.js";
 
 import {
   getDocumentVersions,
   softDeleteDocument,
 } from "./documents.repository.js";
+import { insertAuditLog } from "./documents.audit.repository.js";
 
 export async function createDocumentController(req: Request, res: Response) {
   const data = createDocumentSchema.parse(req.body);
@@ -73,7 +75,7 @@ export async function updateDocumentController(req: Request, res: Response) {
 
   const data = updateDocumentSchema.parse(req.body);
 
-  await updateDocument(documentId, data);
+  await updateDocument(documentId, req.user!.id, data);
 
   res.json({
     message: "document updated",
@@ -157,6 +159,7 @@ export async function revokePermissionController(req: Request, res: Response) {
     documentId,
     userId,
     departmentId,
+    revokedBy: req.user!.id,
   });
 
   res.json({
@@ -184,11 +187,27 @@ export async function downloadDocumentController(req: Request, res: Response) {
     return res.status(404).json({ message: "version not found" });
   }
 
+  await insertAuditLog({
+    documentId,
+    userId: req.user!.id,
+    action: "document_downloaded",
+    metadata: { version },
+  });
+
   res.download(file.filePath);
 }
 
 export async function deleteDocumentController(req: Request, res: Response) {
-  await softDeleteDocument(Number(req.params.documentId));
+  const documentId = Number(req.params.documentId);
+
+  await softDeleteDocument(documentId);
+
+  await insertAuditLog({
+    documentId,
+    userId: req.user!.id,
+    action: "document_deleted",
+    metadata: {},
+  });
 
   res.json({ message: "deleted" });
 }
@@ -199,4 +218,12 @@ export async function searchDocumentsController(req: Request, res: Response) {
   const results = await searchUserDocuments(req.user!.id, query);
 
   res.json(results);
+}
+
+export async function getAuditLogsController(req: Request, res: Response) {
+  const documentId = Number(req.params.documentId);
+
+  const logs = await getDocumentAuditLogs(documentId);
+
+  res.json(logs);
 }
