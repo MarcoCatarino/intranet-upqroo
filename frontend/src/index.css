@@ -1,0 +1,196 @@
+/* ============================================================
+   UPQROO INTRANET — Design Tokens
+   Edita este archivo para cambiar la apariencia de toda la app
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   1. COLOR PALETTE
+   ============================================================ */
+:root {
+  /* --- Brand: UPQROO Naranja / Café --- */
+  --color-brand-orange: #e8621a;
+  --color-brand-orange-dark: #c44e0e;
+  --color-brand-orange-light: #f4894a;
+
+  --color-brand-brown: #6b3d2e;
+  --color-brand-brown-dark: #4a2820;
+  --color-brand-brown-light: #8c5242;
+
+  /* --- Surfaces (fondos) --- */
+  --color-surface: #fafaf8;
+  --color-surface-secondary: #f2ede8;
+  --color-surface-tertiary: #eae3db;
+  --color-surface-border: #d9cfca;
+
+  /* --- Text --- */
+  --color-text-primary: #1c1410;
+  --color-text-secondary: #4a3e38;
+  --color-text-muted: #8c7a72;
+  --color-text-inverse: #fafaf8;
+
+  /* --- Status --- */
+  --color-status-success: #2e7d52;
+  --color-status-warning: #c47b20;
+  --color-status-error: #c0392b;
+  --color-status-info: #2471a3;
+
+  /* ============================================================
+     2. TYPOGRAPHY
+     ============================================================ */
+  --font-display: "Playfair Display";
+  --font-body: "DM Sans";
+  --font-mono: "JetBrains Mono";
+
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+
+  /* ============================================================
+     3. SPACING & LAYOUT
+     ============================================================ */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 68px;
+  --header-height: 60px;
+  --content-max-width: 1200px;
+  --content-padding: 32px;
+
+  /* ============================================================
+     4. RADII
+     ============================================================ */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* ============================================================
+     5. SHADOWS
+     ============================================================ */
+  --shadow-card:
+    0 1px 3px rgba(28, 20, 16, 0.08), 0 4px 12px rgba(28, 20, 16, 0.04);
+  --shadow-dialog:
+    0 8px 32px rgba(28, 20, 16, 0.18), 0 2px 8px rgba(28, 20, 16, 0.1);
+  --shadow-dropdown: 0 4px 16px rgba(28, 20, 16, 0.12);
+
+  /* ============================================================
+     6. TRANSITIONS
+     ============================================================ */
+  --transition-fast: 120ms;
+  --transition-base: 200ms;
+  --transition-slow: 350ms;
+
+  /* ============================================================
+     7. Z-INDEX SCALE
+     ============================================================ */
+  --z-sidebar: 100;
+  --z-header: 200;
+  --z-dropdown: 300;
+  --z-dialog: 400;
+  --z-toast: 500;
+}
+
+/* ============================================================
+   BASE RESETS
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  min-width: 1280px; /* No-responsive: solo PC */
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SCROLLBAR PERSONALIZADO
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-border);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ============================================================
+   UTILIDADES GLOBALES
+   ============================================================ */
+.font-display {
+  font-family: var(--font-display), serif;
+}
+
+.focus-ring {
+  outline: 2px solid var(--color-brand-orange);
+  outline-offset: 2px;
+}
+
+/* Animaciones */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-base) ease both;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--transition-base) ease both;
+}
