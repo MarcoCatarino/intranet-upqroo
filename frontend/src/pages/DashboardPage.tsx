@@ -6,16 +6,17 @@ import {
   Clock,
   TrendingUp,
   ArrowRight,
-  Upload,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useDocumentsStore } from "@/store/documentsStore";
 import { departmentsApi } from "@/services/api";
 import { PageHeader } from "@/components/layout/AppLayout";
-import { Badge, Spinner } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { formatDateTime, canUploadDocuments } from "@/lib/utils";
-import type { Department, Document } from "@/types";
+import { Spinner } from "@/components/ui/Badge";
+import { canUploadDocuments, formatDateTime } from "@/lib/utils";
+import type { Department } from "@/types";
+import { StatCard } from "@/components/sections/dashboard/StarCard";
+import { RecentDocumentRow } from "@/components/sections/dashboard/RecentDocumentRow";
+import { QuickUploadBanner } from "@/components/sections/dashboard/QuickUploadBanner";
 
 export function DashboardPage() {
   const { user } = useAuthStore();
@@ -113,7 +114,9 @@ export function DashboardPage() {
                 </p>
               </div>
             ) : (
-              recentDocs.map((doc) => <DocumentRow key={doc.id} doc={doc} />)
+              recentDocs.map((doc) => (
+                <RecentDocumentRow key={doc.id} doc={doc} />
+              ))
             )}
           </div>
         </div>
@@ -158,77 +161,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {canUploadDocuments(user?.role) && (
-        <div className="mt-6 p-5 bg-[var(--color-brand-brown-dark)] rounded-[var(--radius-xl)] flex items-center justify-between">
-          <div>
-            <p className="font-display text-white text-lg">
-              ¿Necesitas subir un documento?
-            </p>
-            <p className="text-white/60 text-sm mt-0.5">
-              Crea un nuevo documento y sube el archivo PDF.
-            </p>
-          </div>
-          <Link to="/documents">
-            <Button className="bg-[var(--color-brand-orange)] hover:bg-[var(--color-brand-orange-dark)] text-white">
-              <Upload size={14} /> Subir documento
-            </Button>
-          </Link>
-        </div>
-      )}
+      {canUploadDocuments(user?.role) && <QuickUploadBanner />}
     </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  bg,
-  small,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  bg: string;
-  small?: boolean;
-}) {
-  return (
-    <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className={`w-9 h-9 rounded-[var(--radius-md)] ${bg} flex items-center justify-center`}
-        >
-          {icon}
-        </div>
-      </div>
-      <p
-        className={`font-display text-[var(--color-text-primary)] font-bold mb-0.5 ${small ? "text-base" : "text-2xl"}`}
-      >
-        {value}
-      </p>
-      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
-    </div>
-  );
-}
-
-function DocumentRow({ doc }: { doc: Document }) {
-  return (
-    <Link
-      to={`/documents/${doc.id}`}
-      className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--color-surface-secondary)] transition-colors group"
-    >
-      <div className="w-8 h-8 rounded-[var(--radius-md)] bg-red-50 flex items-center justify-center shrink-0">
-        <FileText size={15} className="text-red-500" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-brand-orange)] transition-colors">
-          {doc.title}
-        </p>
-        <p className="text-xs text-[var(--color-text-muted)]">
-          {formatDateTime(doc.createdAt)}
-        </p>
-      </div>
-      <Badge variant="default">v{doc.currentVersion}</Badge>
-    </Link>
   );
 }

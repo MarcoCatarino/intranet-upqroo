@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Users, Search } from "lucide-react";
 import { usersApi } from "@/services/api";
 import { PageHeader } from "@/components/layout/AppLayout";
-import { EmptyState, Spinner, Badge } from "@/components/ui/Badge";
+import { EmptyState, Spinner } from "@/components/ui/Badge";
+import { UserTableRow } from "@/components/sections/users/UserTableRow";
 import { toast } from "@/components/ui/Toast";
 import type { User } from "@/types";
-import { ROLE_LABELS } from "@/types";
-import { formatDateTime } from "@/lib/utils";
 
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -45,8 +44,7 @@ export function UsersPage() {
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await usersApi.search(searchQuery);
-        setSearchResults(res);
+        setSearchResults(await usersApi.search(searchQuery));
       } catch {
       } finally {
         setIsSearching(false);
@@ -95,7 +93,6 @@ export function UsersPage() {
             </span>
           ))}
         </div>
-
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
@@ -105,48 +102,7 @@ export function UsersPage() {
         ) : (
           <div className="divide-y divide-[var(--color-surface-border)]">
             {displayUsers.map((u) => (
-              <div
-                key={u.id}
-                className="grid grid-cols-[40px_1fr_220px_80px_140px] px-5 py-3.5 items-center hover:bg-[var(--color-surface-secondary)] transition-colors"
-              >
-                <div>
-                  {u.avatarUrl ? (
-                    <img
-                      src={u.avatarUrl}
-                      alt={u.name}
-                      className="w-7 h-7 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-[var(--color-brand-orange)]/20 flex items-center justify-center text-[var(--color-brand-orange)] text-xs font-semibold">
-                      {u.name[0]}
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                  {u.name}
-                </span>
-                <span className="text-sm text-[var(--color-text-muted)] truncate">
-                  {u.email}
-                </span>
-                <Badge
-                  variant={
-                    u.role === "admin"
-                      ? "warning"
-                      : u.role === "secretary"
-                        ? "info"
-                        : u.role === "director"
-                          ? "orange"
-                          : "default"
-                  }
-                >
-                  {ROLE_LABELS[u.role] ?? u.role}
-                </Badge>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  {u.createdAt
-                    ? formatDateTime(u.createdAt).split(",")[0]
-                    : "—"}
-                </span>
-              </div>
+              <UserTableRow key={u.id} user={u} />
             ))}
           </div>
         )}
