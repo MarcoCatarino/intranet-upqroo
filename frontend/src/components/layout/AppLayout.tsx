@@ -8,21 +8,22 @@ import {
   ChevronLeft,
   LogOut,
   Settings,
-  Bell,
   Search,
 } from "lucide-react";
-
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import { ROLE_LABELS } from "@/types";
 import type { UserRole } from "@/types";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { useAuthStore } from "@/store/authStore";
 
+// Nav visible para cada rol:
+// - Todos ven Inicio, Documentos, Departamentos
+// - Solo admin ve Usuarios
 const NAV_ITEMS: {
   to: string;
   icon: React.ElementType;
   label: string;
-  roles?: UserRole[];
+  roles?: UserRole[]; // si está definido, solo esos roles lo ven
 }[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Inicio" },
   { to: "/documents", icon: FileText, label: "Documentos" },
@@ -180,9 +181,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)] transition-colors">
-              <Bell size={18} />
-            </button>
+            {/* Bell (notificaciones) — pendiente de implementación, no visible por ahora */}
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
