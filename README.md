@@ -42,7 +42,7 @@ Construido como una **aplicación web con arquitectura modular**, con procesamie
   - [15. Base de Datos](#15-base-de-datos)
   - [16. Infraestructura](#16-infraestructura)
     - [Docker](#docker)
-    - [Nginx (recomendado en producción)](#nginx-recomendado-en-producción)
+    - [Apache (producción en servidor universitario)](#apache-producción-en-servidor-universitario)
   - [17. Flujos del Sistema](#17-flujos-del-sistema)
     - [Subida de documento](#subida-de-documento)
     - [Nueva versión](#nueva-versión)
@@ -590,16 +590,16 @@ services:
 
 El backend y el worker corren **fuera de Docker** directamente en el servidor Ubuntu, gestionados por PM2.
 
-El frontend se sirve como **build estático** a través de Nginx.
+El frontend se sirve como **build estático** a través de Apache.
 
 El filesystem de documentos (`/storage`) vive directamente en el servidor para no aumentar el tamaño de la imagen Docker.
 
-### Nginx (recomendado en producción)
+### Apache (producción en servidor universitario)
 
 ```
 Servidor Ubuntu
 │
-├── Nginx
+├── Apache2
 │   ├── Sirve frontend (build estático de React/Vite)
 │   └── Proxy → backend :3000
 │
@@ -614,6 +614,52 @@ Servidor Ubuntu
 └── Filesystem
     ├── /var/intranet-upqroo/storage   (documentos)
     └── /var/intranet-upqroo/tmp       (temporales)
+```
+
+**Módulos de Apache requeridos:**
+
+```bash
+a2enmod proxy
+a2enmod proxy_http
+a2enmod rewrite
+a2enmod headers
+systemctl restart apache2
+```
+
+**VirtualHost (`/etc/apache2/sites-available/intranet-upqroo.conf`):**
+
+```apache
+<VirtualHost *:80>
+    ServerName intranet.upqroo.edu.mx
+
+    # Frontend — build estático de Vite
+    DocumentRoot /var/intranet-upqroo/frontend/dist
+
+    <Directory /var/intranet-upqroo/frontend/dist>
+        Options -Indexes
+        AllowOverride All
+        Require all granted
+        # Necesario para React Router (SPA): redirige rutas al index.html
+        FallbackResource /index.html
+    </Directory>
+
+    # Backend — proxy al servidor Node.js
+    ProxyPreserveHost On
+    ProxyPass        /api/ http://127.0.0.1:3000/
+    ProxyPassReverse /api/ http://127.0.0.1:3000/
+
+    RequestHeader set X-Forwarded-Proto "http"
+
+    ErrorLog  ${APACHE_LOG_DIR}/intranet-upqroo-error.log
+    CustomLog ${APACHE_LOG_DIR}/intranet-upqroo-access.log combined
+</VirtualHost>
+```
+
+**Activar el sitio:**
+
+```bash
+a2ensite intranet-upqroo.conf
+systemctl reload apache2
 ```
 
 ---
@@ -703,7 +749,7 @@ POST /auth/google        → Verifica token Google
 | Redis            | Broker de colas BullMQ                |
 | Docker + Compose | Contenedores de infraestructura       |
 | PM2              | Supervisor de procesos Node.js        |
-| Nginx            | Reverse proxy + servidor de estáticos |
+| Apache2          | Reverse proxy + servidor de estáticos |
 
 ---
 
@@ -806,10 +852,21 @@ pm2 start ../ecosystem.config.cjs --env production
 pm2 save
 pm2 startup    # Seguir instrucciones del output para arranque automático
 
-# Build del frontend (Nginx lo sirve como estático)
+# Build del frontend (Apache lo sirve como estático)
 cd ../frontend
 pnpm install
-pnpm build    # Genera dist/ para ser servido por Nginx
+pnpm build    # Genera dist/
+
+# Crear directorio de destino y copiar el build
+mkdir -p /var/intranet-upqroo/frontend/dist
+cp -r dist/* /var/intranet-upqroo/frontend/dist/
+
+# Configurar Apache (si no está configurado aún)
+# Ver sección 16 para el contenido del VirtualHost
+cp /ruta/al/repo/intranet-upqroo.conf /etc/apache2/sites-available/
+a2enmod proxy proxy_http rewrite headers
+a2ensite intranet-upqroo.conf
+systemctl reload apache2
 ```
 
 ### Actualización en producción
@@ -827,6 +884,7 @@ pm2 restart all
 cd ../frontend
 pnpm install
 pnpm build
+cp -r dist/* /var/intranet-upqroo/frontend/dist/
 ```
 
 ### Crear primer administrador
@@ -865,7 +923,6 @@ UPDATE users SET role = 'admin' WHERE email = 'tu.correo@upqroo.edu.mx';
 | `MAX_DOCUMENT_VERSIONS` | Máximo de versiones por documento                       | `20`                                                  |
 
 > ⚠️ **En producción:** `STORAGE_PATH` y `TMP_PATH` deben ser rutas **absolutas**. Las rutas relativas (`./storage`) pueden fallar dependiendo del directorio de trabajo del proceso.
-
 > ⚠️ **En producción:** `JWT_SECRET` debe ser un string aleatorio de al menos 64 caracteres. Generar con:
 >
 > ```bash
@@ -895,15 +952,15 @@ UPDATE users SET role = 'admin' WHERE email = 'tu.correo@upqroo.edu.mx';
 
 ### Actuales (conocidas)
 
-| Limitación                                | Impacto | Notas                                                                                           |
-| ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| Sin HTTPS propio                          | Medio   | Depende de Nginx para HTTPS. Sin Nginx + certificado, las cookies `secure` no funcionan         |
-| Sin refresh de JWT                        | Bajo    | La sesión expira a las 4 horas. El usuario debe volver a hacer login                            |
-| Worker sin supervisión automática sin PM2 | Medio   | Sin PM2, si el worker cae nadie lo reinicia. Jobs quedan en cola en Redis hasta reinicio manual |
-| Tipos de archivo solo PDF                 | Bajo    | Word, Excel y PPT están planificados. Los MIME types están comentados en `upload.middleware.ts` |
-| Sin notificaciones                        | Bajo    | No hay aviso cuando un documento es compartido contigo                                          |
-| Sin refresh de roles en JWT               | Bajo    | Si el rol de un usuario cambia en DB, el JWT anterior sigue siendo válido hasta que expire      |
-| Solo PC                                   | Bajo    | La interfaz tiene `min-width: 1280px` y no es responsiva para móviles o tablets                 |
+| Limitación                                | Impacto | Notas                                                                                                      |
+| ----------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| Sin HTTPS propio                          | Medio   | Depende de Apache para HTTPS. Sin certificado SSL configurado en Apache, las cookies `secure` no funcionan |
+| Sin refresh de JWT                        | Bajo    | La sesión expira a las 4 horas. El usuario debe volver a hacer login                                       |
+| Worker sin supervisión automática sin PM2 | Medio   | Sin PM2, si el worker cae nadie lo reinicia. Jobs quedan en cola en Redis hasta reinicio manual            |
+| Tipos de archivo solo PDF                 | Bajo    | Word, Excel y PPT están planificados. Los MIME types están comentados en `upload.middleware.ts`            |
+| Sin notificaciones                        | Bajo    | No hay aviso cuando un documento es compartido contigo                                                     |
+| Sin refresh de roles en JWT               | Bajo    | Si el rol de un usuario cambia en DB, el JWT anterior sigue siendo válido hasta que expire                 |
+| Solo PC                                   | Bajo    | La interfaz tiene `min-width: 1280px` y no es responsiva para móviles o tablets                            |
 
 ---
 
