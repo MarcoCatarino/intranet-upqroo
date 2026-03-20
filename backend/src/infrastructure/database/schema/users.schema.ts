@@ -4,6 +4,7 @@ export type UserRole =
   | "admin"
   | "secretary"
   | "director"
+  | "assistant"
   | "professor"
   | "student";
 
