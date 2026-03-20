@@ -2,6 +2,7 @@ export type UserRole =
   | "admin"
   | "secretary"
   | "director"
+  | "assistant"
   | "professor"
   | "student";
 
@@ -9,6 +10,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Administrador",
   secretary: "Secretaría",
   director: "Director",
+  assistant: "Asistente",
   professor: "Profesor",
   student: "Alumno",
 };
@@ -17,6 +19,7 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   admin: 5,
   secretary: 4,
   director: 3,
+  assistant: 2,
   professor: 2,
   student: 1,
 };
