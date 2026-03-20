@@ -12,6 +12,9 @@ import { env } from "../../config/env.js";
 
 const client = new OAuth2Client(env.GOOGLE.CLIENT_ID);
 
+// Roles que NO se persisten en la base de datos
+const EPHEMERAL_ROLES = ["student", "professor"] as const;
+
 export async function loginWithGoogle(token: string) {
   const ticket = await client.verifyIdToken({
     idToken: token,
@@ -26,35 +29,45 @@ export async function loginWithGoogle(token: string) {
 
   validateInstitutionEmail(payload.email!);
 
-  const dbUser = await findUserByGoogleId(payload.sub);
+  const role = resolveRoleFromEmail(payload.email!);
 
   let user: AuthUser;
 
-  if (!dbUser) {
-    // Asigna rol automáticamente según el email
-    const role = resolveRoleFromEmail(payload.email!);
-
-    const userId = await createUser({
-      googleId: payload.sub,
-      email: payload.email!,
-      name: payload.name!,
-      role,
-      avatarUrl: payload.picture,
-    });
-
+  // Alumnos y profesores: autenticación sin persistencia en DB
+  if (EPHEMERAL_ROLES.includes(role as (typeof EPHEMERAL_ROLES)[number])) {
     user = {
-      id: userId,
+      id: payload.sub, // googleId como identificador de sesión
       email: payload.email!,
       name: payload.name!,
       role,
     };
   } else {
-    user = {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: dbUser.role as AuthUser["role"],
-    };
+    // Admin, secretary, director, assistant → se buscan o crean en DB
+    const dbUser = await findUserByGoogleId(payload.sub);
+
+    if (!dbUser) {
+      const userId = await createUser({
+        googleId: payload.sub,
+        email: payload.email!,
+        name: payload.name!,
+        role,
+        avatarUrl: payload.picture,
+      });
+
+      user = {
+        id: userId,
+        email: payload.email!,
+        name: payload.name!,
+        role,
+      };
+    } else {
+      user = {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        role: dbUser.role as AuthUser["role"],
+      };
+    }
   }
 
   const tokenJwt = jwt.sign(
