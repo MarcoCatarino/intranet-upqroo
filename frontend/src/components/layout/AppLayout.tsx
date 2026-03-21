@@ -16,14 +16,11 @@ import { ROLE_LABELS } from "@/types";
 import type { UserRole } from "@/types";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
-// Nav visible para cada rol:
-// - Todos ven Inicio, Documentos, Departamentos
-// - Solo admin ve Usuarios
 const NAV_ITEMS: {
   to: string;
   icon: React.ElementType;
   label: string;
-  roles?: UserRole[]; // si está definido, solo esos roles lo ven
+  roles?: UserRole[];
 }[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Inicio" },
   { to: "/documents", icon: FileText, label: "Documentos" },
@@ -35,6 +32,7 @@ const ROLE_BADGE_COLORS: Record<UserRole, string> = {
   admin: "bg-red-100 text-red-700",
   secretary: "bg-purple-100 text-purple-700",
   director: "bg-blue-100 text-blue-700",
+  assistant: "bg-teal-100 text-teal-700",
   professor: "bg-green-100 text-green-700",
   student: "bg-gray-100 text-gray-600",
 };
@@ -80,7 +78,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="flex items-center h-[var(--header-height)] px-4 border-b border-white/10 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-3 min-w-0">
-            {/* Logo provisional — reemplazar con <img> cuando esté disponible */}
+            {/* Logo provisional */}
             <div className="shrink-0 w-8 h-8 rounded-md bg-[var(--color-brand-orange)] flex items-center justify-center font-display font-bold text-white text-sm">
               U
             </div>
@@ -118,7 +116,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {!collapsed && (
                 <span className="truncate font-medium">{label}</span>
               )}
-              {/* Tooltip cuando colapsado */}
+              {/* Tooltip  collapse */}
               {collapsed && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-[var(--color-text-primary)] text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                   {label}
@@ -181,7 +179,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Bell (notificaciones) — pendiente de implementación, no visible por ahora */}
+            {/* Bell (notifications) — pendent implementation, no visible */}
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
