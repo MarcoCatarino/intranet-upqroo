@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import {
   FileText,
+  FileSpreadsheet,
+  Presentation,
   Pencil,
   Upload,
   Share2,
@@ -9,8 +11,26 @@ import {
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Badge } from "@/components/ui/Badge";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, cn } from "@/lib/utils";
 import type { Document } from "@/types";
+
+function getDocumentIcon(title: string) {
+  const lower = title.toLowerCase();
+  if (lower.endsWith(".xlsx") || lower.includes("excel")) {
+    return {
+      icon: FileSpreadsheet,
+      color: "text-green-500",
+      bg: "bg-green-50",
+    };
+  }
+  if (lower.endsWith(".pptx") || lower.includes("presentación")) {
+    return { icon: Presentation, color: "text-orange-500", bg: "bg-orange-50" };
+  }
+  if (lower.endsWith(".docx") || lower.includes("word")) {
+    return { icon: FileText, color: "text-blue-500", bg: "bg-blue-50" };
+  }
+  return { icon: FileText, color: "text-red-400", bg: "bg-red-50" };
+}
 
 interface DocumentTableRowProps {
   doc: Document;
@@ -31,6 +51,8 @@ export function DocumentTableRow({
   onShare,
   onDelete,
 }: DocumentTableRowProps) {
+  const { icon: DocIcon, color, bg } = getDocumentIcon(doc.title);
+
   const actions = [
     canEdit && { icon: Pencil, label: "Editar", action: onEdit },
     canEdit && { icon: Upload, label: "Subir versión", action: onUpload },
@@ -45,10 +67,14 @@ export function DocumentTableRow({
 
   return (
     <div className="grid grid-cols-[1fr_180px_80px_100px_52px] px-5 py-3.5 items-center hover:bg-[var(--color-surface-secondary)] transition-colors group">
-      {/* Title */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-[var(--radius-md)] bg-red-50 flex items-center justify-center shrink-0">
-          <FileText size={15} className="text-red-400" />
+        <div
+          className={cn(
+            "w-8 h-8 rounded-[var(--radius-md)] flex items-center justify-center shrink-0",
+            bg,
+          )}
+        >
+          <DocIcon size={15} className={color} />
         </div>
         <div className="min-w-0">
           <Link
@@ -73,7 +99,6 @@ export function DocumentTableRow({
         {formatDateTime(doc.createdAt).split(",")[0]}
       </span>
 
-      {/* Actions dropdown */}
       {hasActions ? (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
