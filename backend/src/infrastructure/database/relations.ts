@@ -19,7 +19,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   uploadedDocuments: many(documentVersions),
   grantedPermissions: many(documentPermissions),
   uploadPermissions: many(professorUploadPermissions),
-  sharePermissions: many(directorSharePermissions), // ← nuevo
+  sharePermissions: many(directorSharePermissions),
 }));
 
 /* =========================
@@ -78,7 +78,7 @@ export const professorUploadPermissionsRelations = relations(
 );
 
 /* =========================
-   DIRECTOR SHARE PERMISSIONS  ← nuevo
+   DIRECTOR SHARE PERMISSIONS
 ========================= */
 
 export const directorSharePermissionsRelations = relations(
