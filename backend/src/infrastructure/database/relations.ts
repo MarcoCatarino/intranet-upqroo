@@ -8,6 +8,7 @@ import { departments } from "./schema/departments.schema.js";
 import { documents } from "./schema/documents.schema.js";
 import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
 import { professorUploadPermissions } from "./schema/professor_upload_permissions.schema.js";
+import { directorSharePermissions } from "./schema/director_share_permissions.schema.js";
 
 /* =========================
    USERS
@@ -18,6 +19,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   uploadedDocuments: many(documentVersions),
   grantedPermissions: many(documentPermissions),
   uploadPermissions: many(professorUploadPermissions),
+  sharePermissions: many(directorSharePermissions), // ← nuevo
 }));
 
 /* =========================
@@ -70,6 +72,28 @@ export const professorUploadPermissionsRelations = relations(
     }),
     grantedByUser: one(users, {
       fields: [professorUploadPermissions.grantedBy],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
+   DIRECTOR SHARE PERMISSIONS  ← nuevo
+========================= */
+
+export const directorSharePermissionsRelations = relations(
+  directorSharePermissions,
+  ({ one }) => ({
+    director: one(users, {
+      fields: [directorSharePermissions.directorId],
+      references: [users.id],
+    }),
+    department: one(departments, {
+      fields: [directorSharePermissions.departmentId],
+      references: [departments.id],
+    }),
+    grantedByUser: one(users, {
+      fields: [directorSharePermissions.grantedBy],
       references: [users.id],
     }),
   }),
