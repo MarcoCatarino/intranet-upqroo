@@ -20,6 +20,9 @@ export function DepartmentsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
+  const [editDept, setEditDept] = useState<Department | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+
   const load = async () => {
     setIsLoading(true);
     try {
@@ -59,6 +62,27 @@ export function DepartmentsPage() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  const handleDelete = async (dept: Department) => {
+    if (
+      !confirm(
+        `¿Eliminar "${dept.name}"? Los documentos asociados se conservan.`,
+      )
+    )
+      return;
+    try {
+      await departmentsApi.delete(dept.id);
+      toast.success("Área eliminada");
+      load();
+    } catch (err) {
+      toast.error("Error al eliminar", (err as Error).message);
+    }
+  };
+
+  const handleEdit = (dept: Department) => {
+    setEditDept(dept);
+    setEditOpen(true);
   };
 
   const hasHierarchy = roots.some(
