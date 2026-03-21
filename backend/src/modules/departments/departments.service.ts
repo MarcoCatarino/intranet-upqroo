@@ -7,6 +7,8 @@ import {
   listUsersInDepartment,
   insertProfessorUploadPermission,
   deleteProfessorUploadPermission,
+  updateDepartment,
+  softDeleteDepartment,
   insertDirectorSharePermission,
   deleteDirectorSharePermission,
   getDirectorSharePermission,
@@ -26,6 +28,31 @@ export async function getDepartments() {
 
 export async function getDepartment(departmentId: number) {
   return findDepartmentById(departmentId);
+}
+
+// Nuevo: editar
+export async function updateDepartmentService(
+  departmentId: number,
+  data: { name?: string; slug?: string },
+) {
+  const existing = await findDepartmentById(departmentId);
+
+  if (!existing) {
+    throw new Error("Departamento no encontrado");
+  }
+
+  return updateDepartment(departmentId, data);
+}
+
+// Nuevo: eliminar (soft)
+export async function deleteDepartmentService(departmentId: number) {
+  const existing = await findDepartmentById(departmentId);
+
+  if (!existing) {
+    throw new Error("Departamento no encontrado");
+  }
+
+  return softDeleteDepartment(departmentId);
 }
 
 export async function addUserService(data: {

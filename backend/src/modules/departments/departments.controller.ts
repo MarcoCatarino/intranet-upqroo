@@ -9,12 +9,15 @@ import {
   usersInDepartment,
   grantProfessorUploadService,
   revokeProfessorUploadService,
+  updateDepartmentService,
+  deleteDepartmentService,
   grantDirectorShareService,
   revokeDirectorShareService,
 } from "./departments.service.js";
 
 import {
   createDepartmentSchema,
+  updateDepartmentSchema,
   departmentIdSchema,
   addUserSchema,
   professorUploadSchema,
@@ -41,6 +44,25 @@ export async function departmentController(req: Request, res: Response) {
   }
 
   res.json(department);
+}
+
+// Nuevo: editar
+export async function updateDepartmentController(req: Request, res: Response) {
+  const { departmentId } = departmentIdSchema.parse(req.params);
+  const data = updateDepartmentSchema.parse(req.body);
+
+  await updateDepartmentService(departmentId, data);
+
+  res.json({ message: "Department updated" });
+}
+
+// Nuevo: eliminar
+export async function deleteDepartmentController(req: Request, res: Response) {
+  const { departmentId } = departmentIdSchema.parse(req.params);
+
+  await deleteDepartmentService(departmentId);
+
+  res.status(204).send();
 }
 
 export async function addUserController(req: Request, res: Response) {

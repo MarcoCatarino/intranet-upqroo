@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { departments } from "../../infrastructure/database/schema/departments.schema.js";
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
@@ -20,17 +20,34 @@ export async function createDepartment(data: {
 }
 
 export async function listDepartments() {
-  return db.select().from(departments);
+  return db.select().from(departments).where(isNull(departments.deletedAt));
 }
 
 export async function findDepartmentById(departmentId: number) {
   const result = await db
     .select()
     .from(departments)
-    .where(eq(departments.id, departmentId))
+    .where(and(eq(departments.id, departmentId), isNull(departments.deletedAt)))
     .limit(1);
 
   return result[0] ?? null;
+}
+
+export async function updateDepartment(
+  departmentId: number,
+  data: { name?: string; slug?: string },
+) {
+  await db
+    .update(departments)
+    .set({ ...data })
+    .where(eq(departments.id, departmentId));
+}
+
+export async function softDeleteDepartment(departmentId: number) {
+  await db
+    .update(departments)
+    .set({ deletedAt: new Date() })
+    .where(eq(departments.id, departmentId));
 }
 
 export async function addUserToDepartment(data: {

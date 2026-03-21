@@ -6,6 +6,11 @@ export const createDepartmentSchema = z.object({
   parentId: z.number().optional(),
 });
 
+export const updateDepartmentSchema = z.object({
+  name: z.string().min(2).max(150).optional(),
+  slug: z.string().min(2).max(100).optional(),
+});
+
 export const departmentIdSchema = z.object({
   departmentId: z.coerce.number(),
 });

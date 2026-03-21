@@ -7,6 +7,8 @@ import {
   createDepartmentController,
   listDepartmentsController,
   departmentController,
+  updateDepartmentController,
+  deleteDepartmentController,
   addUserController,
   removeUserController,
   departmentUsersController,
@@ -23,19 +25,15 @@ const router = Router();
 | Lectura — cualquier usuario autenticado
 |--------------------------------------------------------------------------
 */
-
 router.get("/", authMiddleware, listDepartmentsController);
-
 router.get("/:departmentId", authMiddleware, departmentController);
-
 router.get("/:departmentId/users", authMiddleware, departmentUsersController);
 
 /*
 |--------------------------------------------------------------------------
-| Escritura — solo admin
+| Escritura de departamentos — solo admin
 |--------------------------------------------------------------------------
 */
-
 router.post(
   "/",
   authMiddleware,
@@ -43,6 +41,25 @@ router.post(
   createDepartmentController,
 );
 
+router.patch(
+  "/:departmentId",
+  authMiddleware,
+  roleMiddleware("admin"),
+  updateDepartmentController,
+);
+
+router.delete(
+  "/:departmentId",
+  authMiddleware,
+  roleMiddleware("admin"),
+  deleteDepartmentController,
+);
+
+/*
+|--------------------------------------------------------------------------
+| Usuarios en departamento — solo admin
+|--------------------------------------------------------------------------
+*/
 router.post(
   "/users",
   authMiddleware,
@@ -62,7 +79,6 @@ router.delete(
 | Permisos de subida para profesores — admin o director
 |--------------------------------------------------------------------------
 */
-
 router.post(
   "/:departmentId/professor-upload/:professorId",
   authMiddleware,
@@ -77,6 +93,11 @@ router.delete(
   revokeProfessorUploadController,
 );
 
+/*
+|--------------------------------------------------------------------------
+| Permisos de compartir para directores — admin o secretary
+|--------------------------------------------------------------------------
+*/
 router.post(
   "/:departmentId/director-share/:directorId",
   authMiddleware,
