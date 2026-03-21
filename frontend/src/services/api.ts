@@ -1,8 +1,3 @@
-// ============================================================
-// UPQROO INTRANET — API Service
-// Centraliza todas las llamadas al backend
-// ============================================================
-
 import type {
   User,
   Department,
@@ -58,6 +53,13 @@ export const departmentsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  update: (id: number, data: { name?: string; slug?: string }) =>
+    request(`/departments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: number) => request(`/departments/${id}`, { method: "DELETE" }),
   addUser: (data: { departmentId: number; userId: string; role: string }) =>
     request("/departments/users", {
       method: "POST",
