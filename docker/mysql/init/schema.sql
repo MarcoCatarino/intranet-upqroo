@@ -279,6 +279,34 @@ CREATE TABLE document_audit_logs (
 );
 
 -- ===============================
+-- DIRECTOR SHARE PERMISSIONS
+-- ===============================
+
+CREATE TABLE director_share_permissions (
+    director_id CHAR(36) NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
+    granted_by CHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (director_id, department_id),
+
+    CONSTRAINT fk_dsp_director
+        FOREIGN KEY (director_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dsp_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dsp_granted_by
+        FOREIGN KEY (granted_by)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
 -- PERFORMANCE INDEXES
 -- ===============================
 
