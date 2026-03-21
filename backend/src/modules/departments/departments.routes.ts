@@ -12,6 +12,8 @@ import {
   departmentUsersController,
   grantProfessorUploadController,
   revokeProfessorUploadController,
+  grantDirectorShareController,
+  revokeDirectorShareController,
 } from "./departments.controller.js";
 
 const router = Router();
@@ -73,6 +75,20 @@ router.delete(
   authMiddleware,
   roleMiddleware("admin", "director"),
   revokeProfessorUploadController,
+);
+
+router.post(
+  "/:departmentId/director-share/:directorId",
+  authMiddleware,
+  roleMiddleware("admin", "secretary"),
+  grantDirectorShareController,
+);
+
+router.delete(
+  "/:departmentId/director-share/:directorId",
+  authMiddleware,
+  roleMiddleware("admin", "secretary"),
+  revokeDirectorShareController,
 );
 
 export default router;

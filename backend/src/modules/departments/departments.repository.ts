@@ -5,6 +5,7 @@ import { departments } from "../../infrastructure/database/schema/departments.sc
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
 import { users } from "../../infrastructure/database/schema/users.schema.js";
 import { professorUploadPermissions } from "../../infrastructure/database/schema/professor_upload_permissions.schema.js";
+import { directorSharePermissions } from "../../infrastructure/database/schema/director_share_permissions.schema.js";
 
 export async function createDepartment(data: {
   name: string;
@@ -86,4 +87,44 @@ export async function deleteProfessorUploadPermission(data: {
         eq(professorUploadPermissions.departmentId, data.departmentId),
       ),
     );
+}
+
+export async function insertDirectorSharePermission(data: {
+  directorId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return db.insert(directorSharePermissions).values(data);
+}
+
+export async function deleteDirectorSharePermission(data: {
+  directorId: string;
+  departmentId: number;
+}) {
+  return db
+    .delete(directorSharePermissions)
+    .where(
+      and(
+        eq(directorSharePermissions.directorId, data.directorId),
+        eq(directorSharePermissions.departmentId, data.departmentId),
+      ),
+    );
+}
+
+export async function getDirectorSharePermission(
+  directorId: string,
+  departmentId: number,
+) {
+  const result = await db
+    .select()
+    .from(directorSharePermissions)
+    .where(
+      and(
+        eq(directorSharePermissions.directorId, directorId),
+        eq(directorSharePermissions.departmentId, departmentId),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
 }

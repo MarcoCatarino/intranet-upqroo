@@ -20,3 +20,8 @@ export const professorUploadSchema = z.object({
   departmentId: z.coerce.number(),
   professorId: z.string().uuid(),
 });
+
+export const directorShareSchema = z.object({
+  departmentId: z.coerce.number(),
+  directorId: z.string().uuid(),
+});

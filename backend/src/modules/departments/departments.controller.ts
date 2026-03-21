@@ -9,6 +9,8 @@ import {
   usersInDepartment,
   grantProfessorUploadService,
   revokeProfessorUploadService,
+  grantDirectorShareService,
+  revokeDirectorShareService,
 } from "./departments.service.js";
 
 import {
@@ -16,6 +18,7 @@ import {
   departmentIdSchema,
   addUserSchema,
   professorUploadSchema,
+  directorShareSchema,
 } from "./departments.validators.js";
 
 export async function createDepartmentController(req: Request, res: Response) {
@@ -81,6 +84,32 @@ export async function revokeProfessorUploadController(
   const { departmentId, professorId } = professorUploadSchema.parse(req.params);
 
   await revokeProfessorUploadService({ professorId, departmentId });
+
+  res.status(204).send();
+}
+
+export async function grantDirectorShareController(
+  req: Request,
+  res: Response,
+) {
+  const { departmentId, directorId } = directorShareSchema.parse(req.params);
+
+  await grantDirectorShareService({
+    directorId,
+    departmentId,
+    grantedBy: req.user!.id,
+  });
+
+  res.status(201).json({ message: "Share permission granted" });
+}
+
+export async function revokeDirectorShareController(
+  req: Request,
+  res: Response,
+) {
+  const { departmentId, directorId } = directorShareSchema.parse(req.params);
+
+  await revokeDirectorShareService({ directorId, departmentId });
 
   res.status(204).send();
 }
