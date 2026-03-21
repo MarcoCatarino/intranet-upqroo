@@ -93,9 +93,6 @@ export type PermissionType =
 export type AuditAction =
   | "document_created"
   | "document_uploaded"
-  | "document_downloaded"
-  | "document_shared"
-  | "document_permission_revoked"
   | "document_updated"
   | "document_deleted";
 
