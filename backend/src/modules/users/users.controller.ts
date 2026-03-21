@@ -19,8 +19,23 @@ import type { UserRole } from "../../infrastructure/database/schema/users.schema
 
 export async function getMyProfileController(req: Request, res: Response) {
   const user = await getUserProfile(req.user!.id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-  res.json(user);
+
+  if (user) {
+    return res.json(user);
+  }
+
+  if (req.user!.role === "student" || req.user!.role === "professor") {
+    return res.json({
+      id: req.user!.id,
+      email: req.user!.email,
+      name: req.user!.email.split("@")[0],
+      role: req.user!.role,
+      avatarUrl: null,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  return res.status(404).json({ message: "User not found" });
 }
 
 export async function listUsersController(req: Request, res: Response) {
