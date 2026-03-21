@@ -9,5 +9,7 @@ export const departments = mysqlTable("departments", {
 
   parentId: bigint("parent_id", { mode: "number" }),
 
+  deletedAt: timestamp("deleted_at"),
+
   createdAt: timestamp("created_at").defaultNow(),
 });

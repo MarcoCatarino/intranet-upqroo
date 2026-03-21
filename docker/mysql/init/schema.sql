@@ -49,9 +49,10 @@ CREATE TABLE departments (
     slug VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
 
-    -- NULL = es una Secretaría raíz
-    -- ID = es un departamento hijo de esa Secretaría
     parent_id INT UNSIGNED NULL,
+
+    -- Soft delete
+    deleted_at TIMESTAMP NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -330,3 +331,6 @@ ON documents (department_id, deleted_at);
 
 CREATE INDEX idx_versions_doc_version_desc
 ON document_versions (document_id, version DESC);
+
+CREATE INDEX idx_departments_active
+ON departments (deleted_at);
