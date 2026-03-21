@@ -69,10 +69,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
 
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
   document_created: "Documento creado",
-  document_uploaded: "Archivo subido",
-  document_downloaded: "Archivo descargado",
-  document_shared: "Documento compartido",
-  document_permission_revoked: "Permiso revocado",
+  document_uploaded: "Nueva versión subida",
   document_updated: "Documento actualizado",
   document_deleted: "Documento eliminado",
 };
