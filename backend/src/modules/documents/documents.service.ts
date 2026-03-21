@@ -208,16 +208,6 @@ export async function shareDocument(data: {
     permission: data.permission,
     grantedBy: data.grantedBy,
   });
-
-  await insertAuditLog({
-    documentId: data.documentId,
-    userId: data.grantedBy,
-    action: "document_shared",
-    metadata: {
-      sharedWithDepartmentId: data.departmentId,
-      permission: data.permission,
-    },
-  });
 }
 
 export async function revokeDocumentPermission(data: {
@@ -229,15 +219,6 @@ export async function revokeDocumentPermission(data: {
     documentId: data.documentId,
     userId: undefined,
     departmentId: data.departmentId,
-  });
-
-  await insertAuditLog({
-    documentId: data.documentId,
-    userId: data.revokedBy,
-    action: "document_permission_revoked",
-    metadata: {
-      revokedFromDepartmentId: data.departmentId,
-    },
   });
 }
 
