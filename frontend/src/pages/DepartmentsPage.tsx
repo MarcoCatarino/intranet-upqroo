@@ -8,6 +8,7 @@ import { EmptyState, Spinner } from "@/components/ui/Badge";
 import { DepartmentTree } from "@/components/sections/departments/DepartmentTree";
 import { DepartmentCard } from "@/components/sections/departments/DepartmentCard";
 import { CreateDepartmentDialog } from "@/components/sections/departments/CreateDepartmentDialog";
+import { EditDepartmentDialog } from "@/components/sections/departments/EditDepartmentDialog";
 import { toast } from "@/components/ui/Toast";
 import type { Department } from "@/types";
 
@@ -17,8 +18,9 @@ export function DepartmentsPage() {
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [editDept, setEditDept] = useState<Department | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -64,25 +66,26 @@ export function DepartmentsPage() {
     });
   };
 
+  const handleEdit = (dept: Department) => {
+    setEditDept(dept);
+    setEditOpen(true);
+  };
+
   const handleDelete = async (dept: Department) => {
     if (
       !confirm(
-        `¿Eliminar "${dept.name}"? Los documentos asociados se conservan.`,
+        `¿Eliminar "${dept.name}"?\n\nLos documentos asociados se conservarán, pero el área dejará de aparecer en el sistema.`,
       )
     )
       return;
+
     try {
       await departmentsApi.delete(dept.id);
-      toast.success("Área eliminada");
+      toast.success("Área eliminada", dept.name);
       load();
     } catch (err) {
       toast.error("Error al eliminar", (err as Error).message);
     }
-  };
-
-  const handleEdit = (dept: Department) => {
-    setEditDept(dept);
-    setEditOpen(true);
   };
 
   const hasHierarchy = roots.some(
@@ -128,11 +131,20 @@ export function DepartmentsPage() {
           childrenMap={childrenMap}
           expandedIds={expandedIds}
           onToggle={handleToggle}
+          isAdmin={isAdmin}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       ) : (
         <div className="grid grid-cols-3 gap-4">
           {departments.map((dept) => (
-            <DepartmentCard key={dept.id} department={dept} />
+            <DepartmentCard
+              key={dept.id}
+              department={dept}
+              isAdmin={isAdmin}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
@@ -142,6 +154,18 @@ export function DepartmentsPage() {
           open={createOpen}
           onOpenChange={setCreateOpen}
           departments={departments}
+          onSuccess={load}
+        />
+      )}
+
+      {isAdmin && editDept && (
+        <EditDepartmentDialog
+          open={editOpen}
+          onOpenChange={(o) => {
+            setEditOpen(o);
+            if (!o) setEditDept(null);
+          }}
+          department={editDept}
           onSuccess={load}
         />
       )}
