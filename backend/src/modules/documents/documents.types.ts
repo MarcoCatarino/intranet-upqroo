@@ -18,7 +18,6 @@ export type DocumentPermissionType =
   | "share";
 
 export interface DocumentPermission {
-  userId?: string;
   departmentId?: number;
   documentId: number;
   permission: DocumentPermissionType;
@@ -26,7 +25,6 @@ export interface DocumentPermission {
 
 export interface ShareDocumentInput {
   documentId: number;
-  userId?: string;
-  departmentId?: number;
+  departmentId: number;
   permission: DocumentPermissionType;
 }
