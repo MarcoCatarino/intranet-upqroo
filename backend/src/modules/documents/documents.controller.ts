@@ -127,43 +127,31 @@ export async function getDocumentController(req: Request, res: Response) {
 }
 
 export async function shareDocumentController(req: Request, res: Response) {
-  const { documentId, userId, departmentId, permission } =
-    shareDocumentSchema.parse(req.body);
-
-  if (!userId && !departmentId) {
-    return res.status(400).json({
-      message: "userId or departmentId required",
-    });
-  }
+  const { documentId, departmentId, permission } = shareDocumentSchema.parse(
+    req.body,
+  );
 
   await shareDocument({
     documentId,
-    userId,
     departmentId,
     permission,
     grantedBy: req.user!.id,
   });
 
-  res.json({
-    message: "shared",
-  });
+  res.json({ message: "shared" });
 }
 
 export async function revokePermissionController(req: Request, res: Response) {
   const documentId = Number(req.params.documentId);
-
-  const { userId, departmentId } = revokePermissionSchema.parse(req.body);
+  const { departmentId } = revokePermissionSchema.parse(req.body);
 
   await revokeDocumentPermission({
     documentId,
-    userId,
     departmentId,
     revokedBy: req.user!.id,
   });
 
-  res.json({
-    message: "permission revoked",
-  });
+  res.json({ message: "permission revoked" });
 }
 
 export async function downloadDocumentController(req: Request, res: Response) {

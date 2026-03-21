@@ -197,14 +197,13 @@ export async function getDocument(documentId: number) {
 
 export async function shareDocument(data: {
   documentId: number;
-  userId?: string;
-  departmentId?: number;
+  departmentId: number;
   permission: string;
   grantedBy: string;
 }) {
   await grantUserPermission({
     documentId: data.documentId,
-    userId: data.userId,
+    userId: undefined,
     departmentId: data.departmentId,
     permission: data.permission,
     grantedBy: data.grantedBy,
@@ -215,8 +214,7 @@ export async function shareDocument(data: {
     userId: data.grantedBy,
     action: "document_shared",
     metadata: {
-      sharedWithUserId: data.userId ?? null,
-      sharedWithDepartmentId: data.departmentId ?? null,
+      sharedWithDepartmentId: data.departmentId,
       permission: data.permission,
     },
   });
@@ -224,13 +222,12 @@ export async function shareDocument(data: {
 
 export async function revokeDocumentPermission(data: {
   documentId: number;
-  userId?: string;
-  departmentId?: number;
+  departmentId: number;
   revokedBy: string;
 }) {
   await revokePermission({
     documentId: data.documentId,
-    userId: data.userId,
+    userId: undefined,
     departmentId: data.departmentId,
   });
 
@@ -239,8 +236,7 @@ export async function revokeDocumentPermission(data: {
     userId: data.revokedBy,
     action: "document_permission_revoked",
     metadata: {
-      revokedFromUserId: data.userId ?? null,
-      revokedFromDepartmentId: data.departmentId ?? null,
+      revokedFromDepartmentId: data.departmentId,
     },
   });
 }
