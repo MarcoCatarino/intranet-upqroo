@@ -1,12 +1,14 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { roleMiddleware } from "../../middleware/admin.middleware.js";
 
 import {
   getMyProfileController,
   listUsersController,
   searchUsersController,
   usersByDepartmentController,
+  createUserController,
 } from "./users.controller.js";
 
 const router = Router();
@@ -16,37 +18,34 @@ const router = Router();
 | Profile
 |--------------------------------------------------------------------------
 */
-
-/**
- * GET /users/me
- */
 router.get("/me", authMiddleware, getMyProfileController);
 
 /*
 |--------------------------------------------------------------------------
-| Users
+| Crear usuario — admin, secretary y director según jerarquía
 |--------------------------------------------------------------------------
 */
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware("admin", "secretary", "director"),
+  createUserController,
+);
 
-/**
- * GET /users
- */
-router.get("/", authMiddleware, listUsersController);
+/*
+|--------------------------------------------------------------------------
+| Listar y buscar — solo admin ve la lista completa
+|--------------------------------------------------------------------------
+*/
+router.get("/", authMiddleware, roleMiddleware("admin"), listUsersController);
 
-/**
- * GET /users/search?q=
- */
 router.get("/search", authMiddleware, searchUsersController);
 
 /*
 |--------------------------------------------------------------------------
-| Departments
+| Por departamento
 |--------------------------------------------------------------------------
 */
-
-/**
- * GET /users/department/:departmentId
- */
 router.get(
   "/department/:departmentId",
   authMiddleware,

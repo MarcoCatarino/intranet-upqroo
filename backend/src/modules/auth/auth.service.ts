@@ -6,14 +6,19 @@ import {
   validateInstitutionEmail,
   resolveRoleFromEmail,
 } from "./auth.domain.js";
-import { findUserByGoogleId, createUser } from "./auth.repository.js";
+import {
+  findUserByGoogleId,
+  findUserByEmail,
+  updateUserGoogleId,
+  createUser,
+} from "./auth.repository.js";
 
 import { env } from "../../config/env.js";
 
 const client = new OAuth2Client(env.GOOGLE.CLIENT_ID);
 
-// Roles que NO se persisten en la base de datos
 const EPHEMERAL_ROLES = ["student", "professor"] as const;
+type EphemeralRole = (typeof EPHEMERAL_ROLES)[number];
 
 export async function loginWithGoogle(token: string) {
   const ticket = await client.verifyIdToken({
@@ -22,68 +27,67 @@ export async function loginWithGoogle(token: string) {
   });
 
   const payload = ticket.getPayload();
-
-  if (!payload) {
-    throw new Error("Invalid Google token");
-  }
+  if (!payload) throw new Error("Invalid Google token");
 
   validateInstitutionEmail(payload.email!);
 
-  const role = resolveRoleFromEmail(payload.email!);
-
   let user: AuthUser;
 
-  // Alumnos y profesores: autenticación sin persistencia en DB
-  if (EPHEMERAL_ROLES.includes(role as (typeof EPHEMERAL_ROLES)[number])) {
+  const byGoogleId = await findUserByGoogleId(payload.sub);
+
+  if (byGoogleId) {
     user = {
-      id: payload.sub, // googleId como identificador de sesión
-      email: payload.email!,
-      name: payload.name!,
-      role,
+      id: byGoogleId.id,
+      email: byGoogleId.email,
+      name: byGoogleId.name,
+      role: byGoogleId.role as AuthUser["role"],
     };
   } else {
-    // Admin, secretary, director, assistant → se buscan o crean en DB
-    const dbUser = await findUserByGoogleId(payload.sub);
+    const byEmail = await findUserByEmail(payload.email!);
 
-    if (!dbUser) {
-      const userId = await createUser({
-        googleId: payload.sub,
-        email: payload.email!,
-        name: payload.name!,
-        role,
-        avatarUrl: payload.picture,
-      });
+    if (byEmail) {
+      await updateUserGoogleId(byEmail.id, payload.sub);
 
       user = {
-        id: userId,
-        email: payload.email!,
-        name: payload.name!,
-        role,
+        id: byEmail.id,
+        email: byEmail.email,
+        name: byEmail.name,
+        role: byEmail.role as AuthUser["role"],
       };
     } else {
-      user = {
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name,
-        role: dbUser.role as AuthUser["role"],
-      };
+      const role = resolveRoleFromEmail(payload.email!);
+
+      if (EPHEMERAL_ROLES.includes(role as EphemeralRole)) {
+        user = {
+          id: payload.sub,
+          email: payload.email!,
+          name: payload.name!,
+          role,
+        };
+      } else {
+        const userId = await createUser({
+          googleId: payload.sub,
+          email: payload.email!,
+          name: payload.name!,
+          role,
+          avatarUrl: payload.picture,
+        });
+
+        user = {
+          id: userId,
+          email: payload.email!,
+          name: payload.name!,
+          role,
+        };
+      }
     }
   }
 
   const tokenJwt = jwt.sign(
-    {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    },
+    { userId: user.id, email: user.email, role: user.role },
     env.AUTH.JWT_SECRET,
-    {
-      expiresIn: env.AUTH.JWT_EXPIRES,
-    },
+    { expiresIn: env.AUTH.JWT_EXPIRES },
   );
 
-  return {
-    token: tokenJwt,
-    user,
-  };
+  return { token: tokenJwt, user };
 }

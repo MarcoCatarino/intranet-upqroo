@@ -11,7 +11,7 @@ export type UserRole =
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
 
-  googleId: varchar("google_id", { length: 100 }).notNull().unique(),
+  googleId: varchar("google_id", { length: 100 }).unique(),
 
   email: varchar("email", { length: 150 }).notNull().unique(),
 
@@ -20,6 +20,8 @@ export const users = mysqlTable("users", {
   avatarUrl: varchar("avatar_url", { length: 255 }),
 
   role: varchar("role", { length: 20 }).notNull().default("student"),
+
+  createdBy: varchar("created_by", { length: 36 }),
 
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -15,18 +15,27 @@ USE `intranet-upqroo`;
 CREATE TABLE users (
     id CHAR(36) PRIMARY KEY,
 
-    google_id VARCHAR(100) NOT NULL UNIQUE,
+    -- Nullable: se llena en el primer login con Google
+    google_id VARCHAR(100) NULL UNIQUE,
     email VARCHAR(150) NOT NULL UNIQUE,
     name VARCHAR(150) NOT NULL,
     avatar_url TEXT,
 
-    -- Roles: admin, secretary, director, professor, student
+    -- Roles: admin, secretary, director, assistant, professor, student
     role VARCHAR(20) NOT NULL DEFAULT 'student',
+
+    -- Quién registró a este usuario (NULL solo para el primer admin)
+    created_by CHAR(36) NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_users_email (email),
-    INDEX idx_users_role (role)
+    INDEX idx_users_role (role),
+
+    CONSTRAINT fk_users_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(id)
+        ON DELETE SET NULL
 );
 
 -- ===============================

@@ -5,58 +5,53 @@ import {
   getAllUsers,
   searchUser,
   getUsersByDepartment,
+  createManagedUserService,
 } from "./users.service.js";
 
 import {
   searchUsersSchema,
   departmentUsersSchema,
   paginationSchema,
+  createUserSchema,
 } from "./users.validators.js";
 
-/**
- * GET /users/me
- */
+import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
+
 export async function getMyProfileController(req: Request, res: Response) {
   const user = await getUserProfile(req.user!.id);
-
-  if (!user) {
-    return res.status(404).json({
-      message: "User not found",
-    });
-  }
-
+  if (!user) return res.status(404).json({ message: "User not found" });
   res.json(user);
 }
 
-/**
- * GET /users
- */
 export async function listUsersController(req: Request, res: Response) {
   const { page, limit } = paginationSchema.parse(req.query);
-
   const result = await getAllUsers(page, limit);
-
   res.json(result);
 }
 
-/**
- * GET /users/search?q=
- */
 export async function searchUsersController(req: Request, res: Response) {
   const { q } = searchUsersSchema.parse(req.query);
-
   const users = await searchUser(q);
-
   res.json(users);
 }
 
-/**
- * GET /users/department/:departmentId
- */
 export async function usersByDepartmentController(req: Request, res: Response) {
   const { departmentId } = departmentUsersSchema.parse(req.params);
-
   const users = await getUsersByDepartment(departmentId);
-
   res.json(users);
+}
+
+export async function createUserController(req: Request, res: Response) {
+  const data = createUserSchema.parse(req.body);
+
+  const result = await createManagedUserService({
+    creatorId: req.user!.id,
+    creatorRole: req.user!.role as UserRole,
+    name: data.name,
+    email: data.email,
+    role: data.role as UserRole,
+    departmentId: data.departmentId,
+  });
+
+  res.status(201).json(result);
 }
