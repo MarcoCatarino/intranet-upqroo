@@ -174,13 +174,6 @@ export async function downloadDocumentController(req: Request, res: Response) {
     return res.status(404).json({ message: "version not found" });
   }
 
-  await insertAuditLog({
-    documentId,
-    userId: req.user!.id,
-    action: "document_downloaded",
-    metadata: { version },
-  });
-
   res.download(file.filePath);
 }
 
