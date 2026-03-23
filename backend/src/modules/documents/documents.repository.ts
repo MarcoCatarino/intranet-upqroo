@@ -320,21 +320,21 @@ export async function countUserDocuments(
   userId: string,
   userRole: string,
   studentDepartmentId?: number,
-) {
+): Promise<number> {
   if (userRole === "admin") {
     const result = await db
-      .select({ id: documents.id })
+      .select({ count: sql<number>`COUNT(*)` })
       .from(documents)
       .where(isNull(documents.deletedAt));
 
-    return result.length;
+    return result[0]?.count ?? 0;
   }
 
   if (userRole === "student") {
     if (!studentDepartmentId) return 0;
 
     const result = await db
-      .selectDistinct({ id: documents.id })
+      .select({ count: sql<number>`COUNT(DISTINCT ${documents.id})` })
       .from(documents)
       .innerJoin(
         documentPermissions,
@@ -347,11 +347,11 @@ export async function countUserDocuments(
         ),
       );
 
-    return result.length;
+    return result[0]?.count ?? 0;
   }
 
   const result = await db
-    .selectDistinct({ id: documents.id })
+    .select({ count: sql<number>`COUNT(DISTINCT ${documents.id})` })
     .from(documents)
     .leftJoin(
       documentPermissions,
@@ -388,7 +388,7 @@ export async function countUserDocuments(
       ),
     );
 
-  return result.length;
+  return result[0]?.count ?? 0;
 }
 
 export async function hasProfessorUploadPermission(
@@ -407,4 +407,15 @@ export async function hasProfessorUploadPermission(
     .limit(1);
 
   return result.length > 0;
+}
+
+export async function getDocumentVersionPaths(
+  documentId: number,
+): Promise<string[]> {
+  const result = await db
+    .select({ filePath: documentVersions.filePath })
+    .from(documentVersions)
+    .where(eq(documentVersions.documentId, documentId));
+
+  return result.map((r) => r.filePath);
 }
