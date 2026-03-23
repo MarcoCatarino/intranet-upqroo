@@ -9,6 +9,7 @@ import { documents } from "./schema/documents.schema.js";
 import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
 import { professorUploadPermissions } from "./schema/professor_upload_permissions.schema.js";
 import { directorSharePermissions } from "./schema/director_share_permissions.schema.js";
+import { studentEnrollments } from "./schema/student_enrollments.schema.js";
 
 /* =========================
    USERS
@@ -20,6 +21,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   grantedPermissions: many(documentPermissions),
   uploadPermissions: many(professorUploadPermissions),
   sharePermissions: many(directorSharePermissions),
+  uploadedEnrollments: many(studentEnrollments),
 }));
 
 /* =========================
@@ -30,6 +32,7 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   users: many(departmentUsers),
   documents: many(documents),
   children: many(departments, { relationName: "parent" }),
+  enrollments: many(studentEnrollments),
   parent: one(departments, {
     fields: [departments.parentId],
     references: [departments.id],
@@ -174,6 +177,24 @@ export const documentAuditLogsRelations = relations(
     }),
     user: one(users, {
       fields: [documentAuditLogs.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
+   STUDENT ENROLLMENTS
+========================= */
+
+export const studentEnrollmentsRelations = relations(
+  studentEnrollments,
+  ({ one }) => ({
+    department: one(departments, {
+      fields: [studentEnrollments.departmentId],
+      references: [departments.id],
+    }),
+    uploadedByUser: one(users, {
+      fields: [studentEnrollments.uploadedBy],
       references: [users.id],
     }),
   }),

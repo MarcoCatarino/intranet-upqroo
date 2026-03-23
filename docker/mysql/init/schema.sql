@@ -308,6 +308,33 @@ CREATE TABLE director_share_permissions (
 );
 
 -- ===============================
+-- STUDENT ENROLLMENTS (Padrón)
+-- ===============================
+
+CREATE TABLE student_enrollments (
+    matricula     VARCHAR(20)  NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
+    uploaded_by   CHAR(36)     NOT NULL,
+    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (matricula, department_id),
+
+    INDEX idx_enrollments_matricula (matricula),
+    INDEX idx_enrollments_department (department_id),
+
+    CONSTRAINT fk_enrollments_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_enrollments_uploaded_by
+        FOREIGN KEY (uploaded_by)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
 -- PERFORMANCE INDEXES
 -- ===============================
 

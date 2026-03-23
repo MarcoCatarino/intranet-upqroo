@@ -9,3 +9,5 @@ export * from "./documents.schema.js";
 export * from "./document_versions.schema.js";
 export * from "./document_permissions.schema.js";
 export * from "./document_audit_logs.schema.js";
+
+export * from "./student_enrollments.schema.js";
