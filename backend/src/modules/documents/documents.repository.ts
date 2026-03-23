@@ -293,12 +293,14 @@ export async function searchDocuments(
       AND (
         ${
           userRole === "student"
-            ? sql`(${studentDepartmentId != null} AND dp.department_id = ${studentDepartmentId ?? 0})`
+            ? studentDepartmentId != null
+              ? sql`dp.department_id = ${studentDepartmentId}`
+              : sql`FALSE`
             : sql`(
-              d.owner_id = ${userId}
-              OR dp.user_id = ${userId}
-              OR du.user_id = ${userId}
-            )`
+                d.owner_id = ${userId}
+                OR dp.user_id = ${userId}
+                OR du.user_id = ${userId}
+              )`
         }
       )
       AND (
