@@ -30,7 +30,6 @@ export function formatDateTime(dateStr: string): string {
   }).format(new Date(dateStr));
 }
 
-// Role helpers
 export function hasRole(
   userRole: UserRole | undefined,
   ...roles: UserRole[]
@@ -48,7 +47,7 @@ export function canManageDepartments(role: UserRole | undefined): boolean {
 }
 
 export function canUploadDocuments(role: UserRole | undefined): boolean {
-  return hasRole(role, "admin", "secretary", "director", "professor");
+  return hasRole(role, "admin", "secretary", "director");
 }
 
 export function canShareDocuments(role: UserRole | undefined): boolean {

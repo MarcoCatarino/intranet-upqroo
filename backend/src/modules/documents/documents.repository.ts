@@ -89,24 +89,6 @@ export async function createDocument(data: {
   return result[0].id;
 }
 
-export async function createDocumentVersion(data: {
-  documentId: number;
-  version: number;
-  filePath: string;
-  mimeType: string;
-  fileSize: number;
-  uploadedBy: string;
-}) {
-  await db.insert(documentVersions).values({
-    documentId: data.documentId,
-    version: data.version,
-    filePath: data.filePath,
-    mimeType: data.mimeType,
-    fileSize: data.fileSize,
-    uploadedBy: data.uploadedBy,
-  });
-}
-
 export async function listDocuments(
   userId: string,
   userRole: string,
