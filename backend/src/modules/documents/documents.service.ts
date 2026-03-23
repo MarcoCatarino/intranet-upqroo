@@ -160,15 +160,15 @@ export async function storeDocumentFile(data: {
 
     dbSucceeded = true;
 
-    await fs.rename(data.tmpPath, finalPath!);
+    await fs.copyFile(data.tmpPath, finalPath!);
   } catch (err) {
     if (dbSucceeded && finalPath) {
-      await fs.unlink(data.tmpPath).catch(() => null);
+      await fs.unlink(finalPath).catch(() => null);
     }
     throw err;
+  } finally {
+    await fs.unlink(data.tmpPath).catch(() => null);
   }
-
-  await fs.unlink(data.tmpPath).catch(() => null);
 }
 
 export async function updateDocument(

@@ -4,10 +4,8 @@ import { env } from "../../config/env.js";
 
 const TMP_DIR = env.TMP_PATH!;
 
-// Archivos temporales más viejos que este tiempo se eliminan
 const MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 horas
 
-// Ejecuta cada hora
 const INTERVAL_MS = 60 * 60 * 1000;
 
 export async function cleanTmpFiles() {
@@ -31,7 +29,6 @@ export async function cleanTmpFiles() {
           );
         }
       } catch {
-        // Si no se puede leer/borrar un archivo específico, continúa con los demás
       }
     }
 
@@ -46,9 +43,7 @@ export async function cleanTmpFiles() {
 export function startCleanupScheduler() {
   console.log("Tmp cleanup scheduler started (runs every hour)");
 
-  // Ejecuta una vez al arrancar para limpiar archivos del arranque anterior
   cleanTmpFiles();
 
-  // Luego cada hora
   setInterval(cleanTmpFiles, INTERVAL_MS);
 }
