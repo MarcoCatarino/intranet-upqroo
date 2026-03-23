@@ -2,7 +2,6 @@ import { db } from "../../infrastructure/database/drizzle.js";
 import { desc, eq } from "drizzle-orm";
 import { documentAuditLogs } from "../../infrastructure/database/schema/document_audit_logs.schema.js";
 
-// Solo creación, subida de versión, edición y eliminación
 export type AuditAction =
   | "document_created"
   | "document_uploaded"
