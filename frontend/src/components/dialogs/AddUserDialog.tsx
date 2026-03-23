@@ -17,7 +17,7 @@ export function AddUserDialog({
   onSuccess: () => void;
 }) {
   const [userId, setUserId] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("director");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -60,9 +60,10 @@ export function AddUserDialog({
           value={role}
           onChange={(e) => setRole(e.target.value)}
           options={[
-            { value: "member", label: "Miembro" },
-            { value: "coordinator", label: "Coordinador" },
             { value: "director", label: "Director" },
+            { value: "assistant", label: "Asistente" },
+            { value: "professor", label: "Profesor" },
+            { value: "secretary", label: "Secretaría" },
           ]}
         />
       </div>
