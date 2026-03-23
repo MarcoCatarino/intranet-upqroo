@@ -41,6 +41,7 @@ export async function userHasDocumentAccess(
     .where(
       and(
         eq(documents.id, documentId),
+        isNull(documents.deletedAt),
         or(
           eq(documents.ownerId, userId),
           eq(documentPermissions.userId, userId),

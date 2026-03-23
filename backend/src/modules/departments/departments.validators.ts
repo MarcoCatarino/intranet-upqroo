@@ -23,7 +23,7 @@ export const addUserSchema = z.object({
 
 export const professorUploadSchema = z.object({
   departmentId: z.coerce.number(),
-  professorId: z.string().uuid(),
+  professorId: z.string().min(1).max(100),
 });
 
 export const directorShareSchema = z.object({
