@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { roleMiddleware } from "../../middleware/admin.middleware.js";
 import { documentRoleMiddleware } from "../../middleware/documentRole.middleware.js";
 import { uploadMiddleware } from "../../middleware/upload.middleware.js";
 
@@ -23,23 +24,11 @@ import { retryFailedJobsController } from "./documents.admin.controller.js";
 
 const router = Router();
 
-/*
-|--------------------------------------------------------------------------
-| DOCUMENTS — Rutas estáticas primero
-|--------------------------------------------------------------------------
-*/
-
 router.get("/", authMiddleware, listDocumentsController);
 
 router.get("/search", authMiddleware, searchDocumentsController);
 
 router.post("/", authMiddleware, createDocumentController);
-
-/*
-|--------------------------------------------------------------------------
-| VERSIONS & UPLOAD — Rutas estáticas antes de /:documentId
-|--------------------------------------------------------------------------
-*/
 
 router.post(
   "/upload",
@@ -49,12 +38,6 @@ router.post(
   uploadDocumentController,
 );
 
-/*
-|--------------------------------------------------------------------------
-| SHARING — Rutas estáticas antes de /:documentId
-|--------------------------------------------------------------------------
-*/
-
 router.post(
   "/share",
   authMiddleware,
@@ -62,13 +45,12 @@ router.post(
   shareDocumentController,
 );
 
-router.post("/retry-failed", authMiddleware, retryFailedJobsController);
-
-/*
-|--------------------------------------------------------------------------
-| DOCUMENTS — Rutas dinámicas con /:documentId
-|--------------------------------------------------------------------------
-*/
+router.post(
+  "/retry-failed",
+  authMiddleware,
+  roleMiddleware("admin"),
+  retryFailedJobsController,
+);
 
 router.get(
   "/:documentId",
@@ -87,7 +69,7 @@ router.patch(
 router.delete(
   "/:documentId",
   authMiddleware,
-  documentRoleMiddleware("edit"),
+  roleMiddleware("admin", "secretary", "director"),
   deleteDocumentController,
 );
 
@@ -118,12 +100,6 @@ router.get(
   documentRoleMiddleware("view"),
   getAuditLogsController,
 );
-
-/*
-|--------------------------------------------------------------------------
-| DOWNLOAD
-|--------------------------------------------------------------------------
-*/
 
 router.get(
   "/:documentId/version/:version",
