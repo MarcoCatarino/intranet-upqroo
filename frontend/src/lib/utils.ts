@@ -12,22 +12,36 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) return "—";
+
+  const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+
+  if (isNaN(date.getTime())) return "—";
+
   return new Intl.DateTimeFormat("es-MX", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(dateStr));
+  }).format(date);
 }
 
-export function formatDateTime(dateStr: string): string {
+export function formatDateTime(
+  dateStr: string | Date | null | undefined,
+): string {
+  if (!dateStr) return "—";
+
+  const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+
+  if (isNaN(date.getTime())) return "—";
+
   return new Intl.DateTimeFormat("es-MX", {
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(dateStr));
+  }).format(date);
 }
 
 export function hasRole(
