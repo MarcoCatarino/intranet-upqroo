@@ -36,8 +36,6 @@ export const useAuthStore = create<AuthState>()(
             set({ user: null, isAuthenticated: false, sessionVerified: true });
             return;
           }
-
-          set({ isLoading: false });
           throw err;
         } finally {
           set({ isLoading: false });

@@ -15,6 +15,7 @@ import {
   createUserSchema,
 } from "./users.validators.js";
 
+import { resolveStudentDepartment } from "../students/students.service.js";
 import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
 
 export async function getMyProfileController(req: Request, res: Response) {
@@ -25,6 +26,13 @@ export async function getMyProfileController(req: Request, res: Response) {
   }
 
   if (req.user!.role === "student" || req.user!.role === "professor") {
+    let freshDepartmentId: number | null = null;
+
+    if (req.user!.role === "student") {
+      const matricula = req.user!.email.split("@")[0];
+      freshDepartmentId = await resolveStudentDepartment(matricula);
+    }
+
     return res.json({
       id: req.user!.id,
       email: req.user!.email,
@@ -32,7 +40,7 @@ export async function getMyProfileController(req: Request, res: Response) {
       role: req.user!.role,
       avatarUrl: null,
       createdAt: new Date().toISOString(),
-      departmentId: req.user!.departmentId ?? null,
+      departmentId: freshDepartmentId ?? null,
     });
   }
 
