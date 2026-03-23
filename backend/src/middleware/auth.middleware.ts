@@ -22,6 +22,7 @@ export function authMiddleware(
       id: decoded.userId,
       email: decoded.email,
       role: decoded.role as UserRole,
+      departmentId: decoded.departmentId ?? undefined,
     };
 
     next();

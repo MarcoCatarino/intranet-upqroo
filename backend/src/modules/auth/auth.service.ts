@@ -12,6 +12,7 @@ import {
   updateUserGoogleId,
   createUser,
 } from "./auth.repository.js";
+import { resolveStudentDepartment } from "../students/students.service.js";
 
 import { env } from "../../config/env.js";
 
@@ -83,11 +84,27 @@ export async function loginWithGoogle(token: string) {
     }
   }
 
-  const tokenJwt = jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
-    env.AUTH.JWT_SECRET,
-    { expiresIn: env.AUTH.JWT_EXPIRES },
-  );
+  let studentDepartmentId: number | undefined;
 
-  return { token: tokenJwt, user };
+  if (user.role === "student") {
+    const matricula = payload.email!.split("@")[0];
+    const found = await resolveStudentDepartment(matricula);
+    studentDepartmentId = found ?? undefined;
+  }
+
+  const jwtPayload: Record<string, unknown> = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  if (studentDepartmentId !== undefined) {
+    jwtPayload.departmentId = studentDepartmentId;
+  }
+
+  const tokenJwt = jwt.sign(jwtPayload, env.AUTH.JWT_SECRET, {
+    expiresIn: env.AUTH.JWT_EXPIRES,
+  });
+
+  return { token: tokenJwt, user, departmentId: studentDepartmentId };
 }
