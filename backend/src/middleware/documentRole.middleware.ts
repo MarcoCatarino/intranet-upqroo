@@ -17,69 +17,110 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return res.status(400).json({ message: "Document id required" });
     }
 
-    if (requiredPermission === "share" && userRole === "director") {
-      const deptResult = await db
-        .select({ departmentId: departmentUsers.departmentId })
-        .from(departmentUsers)
-        .where(eq(departmentUsers.userId, userId!))
+    // ── Admin: acceso total ──────────────────────────────────────────────────
+    if (userRole === "admin") {
+      return next();
+    }
+
+    // ── Verificar que el documento existe y no está eliminado ────────────────
+    const docResult = await db
+      .select({ id: documents.id, ownerId: documents.ownerId })
+      .from(documents)
+      .where(and(eq(documents.id, documentId), isNull(documents.deletedAt)))
+      .limit(1);
+
+    if (docResult.length === 0) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const doc = docResult[0];
+
+    // ── Owner: acceso total sobre su propio documento ────────────────────────
+    if (doc.ownerId === userId) {
+      return next();
+    }
+
+    // ── Verificación de permiso directo por userId ───────────────────────────
+    // Preparado para futuros sprints donde se asignen permisos a usuarios individuales.
+    // Actualmente los permisos se asignan solo a departamentos, pero si en el futuro
+    // se asigna un permiso directo a un usuario, este bloque lo resuelve sin
+    // necesidad de modificar el middleware.
+    const userDirectPermission = await db
+      .select({ id: documentPermissions.id })
+      .from(documentPermissions)
+      .where(
+        and(
+          eq(documentPermissions.documentId, documentId),
+          eq(documentPermissions.userId, userId!),
+          eq(documentPermissions.permission, requiredPermission),
+        ),
+      )
+      .limit(1);
+
+    if (userDirectPermission.length > 0) {
+      return next();
+    }
+
+    // ── Verificación de permiso por departamento ─────────────────────────────
+    // Flujo actual: secretario crea director → director tiene permiso de compartir
+    // si secretary se lo habilitó → director comparte con departamentos completos.
+    const userDeptResult = await db
+      .select({ departmentId: departmentUsers.departmentId })
+      .from(departmentUsers)
+      .where(eq(departmentUsers.userId, userId!))
+      .limit(1);
+
+    const userDepartmentId = userDeptResult[0]?.departmentId;
+
+    if (userDepartmentId) {
+      const deptPermission = await db
+        .select({ id: documentPermissions.id })
+        .from(documentPermissions)
+        .where(
+          and(
+            eq(documentPermissions.documentId, documentId),
+            eq(documentPermissions.departmentId, userDepartmentId),
+            eq(documentPermissions.permission, requiredPermission),
+          ),
+        )
         .limit(1);
 
-      const directorDeptId = deptResult[0]?.departmentId;
+      if (deptPermission.length > 0) {
+        return next();
+      }
+    }
 
-      if (!directorDeptId) {
+    // ── Verificación adicional para "share" en directores ────────────────────
+    // Un director solo puede compartir si el secretario le habilitó ese permiso
+    // explícitamente en director_share_permissions.
+    if (requiredPermission === "share" && userRole === "director") {
+      if (!userDepartmentId) {
         return res.status(403).json({
           message: "Director sin departamento asignado",
         });
       }
 
       const sharePermResult = await db
-        .select()
+        .select({ id: directorSharePermissions.directorId })
         .from(directorSharePermissions)
         .where(
           and(
             eq(directorSharePermissions.directorId, userId!),
-            eq(directorSharePermissions.departmentId, directorDeptId),
+            eq(directorSharePermissions.departmentId, userDepartmentId),
           ),
         )
         .limit(1);
 
-      if (sharePermResult.length === 0) {
-        return res.status(403).json({
-          message: "No tienes permiso para compartir documentos",
-        });
+      if (sharePermResult.length > 0) {
+        return next();
       }
+
+      return res.status(403).json({
+        message: "No tienes permiso para compartir documentos",
+      });
     }
 
-    const result = await db
-      .select()
-      .from(documents)
-      .leftJoin(
-        documentPermissions,
-        eq(documentPermissions.documentId, documents.id),
-      )
-      .leftJoin(departmentUsers, eq(departmentUsers.userId, userId!))
-      .where(
-        and(
-          eq(documents.id, documentId),
-          isNull(documents.deletedAt),
-          or(
-            eq(documents.ownerId, userId!),
-
-            and(
-              eq(
-                documentPermissions.departmentId,
-                departmentUsers.departmentId,
-              ),
-              eq(documentPermissions.permission, requiredPermission),
-            ),
-          ),
-        ),
-      );
-
-    if (result.length === 0) {
-      return res.status(403).json({ message: "Permission denied" });
-    }
-
-    next();
+    // ── Sin ningún permiso válido ────────────────────────────────────────────
+    return res.status(403).json({ message: "Permission denied" });
   };
 }
