@@ -17,7 +17,10 @@ export const studentEnrollments = mysqlTable(
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
 
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.matricula, table.departmentId] }),
