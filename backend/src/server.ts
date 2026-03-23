@@ -52,13 +52,23 @@ if (cluster.isPrimary) {
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization",
       );
+
+      if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+      }
+
+      return next();
     }
 
     if (req.method === "OPTIONS") {
-      return res.sendStatus(204);
+      return res.status(403).json({ message: "Origin not allowed" });
     }
 
-    next();
+    if (!origin) {
+      return next();
+    }
+
+    return res.status(403).json({ message: "Origin not allowed" });
   });
 
   app.use(compression({ threshold: 1024 }));
