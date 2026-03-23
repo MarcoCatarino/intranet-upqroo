@@ -5,6 +5,8 @@ import { loginWithGoogle } from "./auth.service.js";
 
 import { env } from "../../config/env.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export async function googleLogin(req: Request, res: Response) {
   const parsed = googleAuthSchema.parse(req.body);
 
@@ -13,7 +15,7 @@ export async function googleLogin(req: Request, res: Response) {
   res.cookie(env.AUTH.COOKIE_NAME, result.token, {
     httpOnly: true,
     sameSite: "strict",
-    secure: true,
+    secure: isProduction,
     maxAge: 1000 * 60 * 60 * 4,
   });
 
@@ -22,11 +24,11 @@ export async function googleLogin(req: Request, res: Response) {
   });
 }
 
-export function logout(req: Request, res: Response) {
+export function logout(_req: Request, res: Response) {
   res.clearCookie(env.AUTH.COOKIE_NAME, {
     httpOnly: true,
     sameSite: "strict",
-    secure: true,
+    secure: isProduction,
   });
 
   res.status(204).send();
