@@ -22,6 +22,7 @@ import {
 
 import {
   createNewDocument,
+  verifyProfessorCanUpload,
   queueDocumentUpload,
   shareDocument,
   getUserDocuments,
@@ -63,8 +64,19 @@ export async function createDocumentController(req: Request, res: Response) {
 
 export async function uploadDocumentController(req: Request, res: Response) {
   const userRole = req.user!.role as UserRole;
+  const documentId = Number(req.body.documentId);
 
-  if (!canProfessorUpload(userRole, true)) {
+  if (userRole === "professor") {
+    const hasPermission = await verifyProfessorCanUpload(
+      req.user!.id,
+      documentId,
+    );
+    if (!canProfessorUpload(userRole, hasPermission)) {
+      return res
+        .status(403)
+        .json({ message: "No tienes permiso para subir archivos" });
+    }
+  } else if (!canProfessorUpload(userRole, true)) {
     return res
       .status(403)
       .json({ message: "No tienes permiso para subir archivos" });
@@ -75,8 +87,6 @@ export async function uploadDocumentController(req: Request, res: Response) {
   if (!file) {
     return res.status(400).json({ message: "File required" });
   }
-
-  const documentId = Number(req.body.documentId);
 
   await queueDocumentUpload({
     documentId,
@@ -230,7 +240,12 @@ export async function deleteDocumentController(req: Request, res: Response) {
 
 export async function searchDocumentsController(req: Request, res: Response) {
   const query = String(req.query.q || "");
-  const results = await searchUserDocuments(req.user!.id, query);
+  const results = await searchUserDocuments(
+    req.user!.id,
+    query,
+    req.user!.role ?? "student",
+    req.user!.departmentId,
+  );
   res.json(results);
 }
 

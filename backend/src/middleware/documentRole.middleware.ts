@@ -5,6 +5,7 @@ import { documents } from "../infrastructure/database/schema/documents.schema.js
 import { documentPermissions } from "../infrastructure/database/schema/document_permissions.schema.js";
 import { departmentUsers } from "../infrastructure/database/schema/departments_users.schema.js";
 import { directorSharePermissions } from "../infrastructure/database/schema/director_share_permissions.schema.js";
+import { professorUploadPermissions } from "../infrastructure/database/schema/professor_upload_permissions.schema.js";
 
 export function documentRoleMiddleware(requiredPermission: string) {
   return async function (req: Request, res: Response, next: NextFunction) {
@@ -24,7 +25,11 @@ export function documentRoleMiddleware(requiredPermission: string) {
 
     // ── Verificar que el documento existe y no está eliminado ────────────────
     const docResult = await db
-      .select({ id: documents.id, ownerId: documents.ownerId })
+      .select({
+        id: documents.id,
+        ownerId: documents.ownerId,
+        departmentId: documents.departmentId,
+      })
       .from(documents)
       .where(and(eq(documents.id, documentId), isNull(documents.deletedAt)))
       .limit(1);
@@ -40,11 +45,30 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return next();
     }
 
+    // ── Verificación de permiso de subida para profesores ────────────────────
+    // Un profesor solo puede subir si el director le habilitó el permiso
+    // explícitamente en professor_upload_permissions para el departamento
+    // al que pertenece el documento.
+    if (requiredPermission === "upload_version" && userRole === "professor") {
+      const uploadPerm = await db
+        .select({ professorId: professorUploadPermissions.professorId })
+        .from(professorUploadPermissions)
+        .where(
+          and(
+            eq(professorUploadPermissions.professorId, userId!),
+            eq(professorUploadPermissions.departmentId, doc.departmentId),
+          ),
+        )
+        .limit(1);
+
+      if (uploadPerm.length > 0) return next();
+
+      return res.status(403).json({
+        message: "No tienes permiso de subida en este departamento",
+      });
+    }
+
     // ── Verificación de permiso directo por userId ───────────────────────────
-    // Preparado para futuros sprints donde se asignen permisos a usuarios individuales.
-    // Actualmente los permisos se asignan solo a departamentos, pero si en el futuro
-    // se asigna un permiso directo a un usuario, este bloque lo resuelve sin
-    // necesidad de modificar el middleware.
     const userDirectPermission = await db
       .select({ id: documentPermissions.id })
       .from(documentPermissions)
@@ -62,8 +86,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
     }
 
     // ── Verificación de permiso por departamento ─────────────────────────────
-    // Flujo actual: secretario crea director → director tiene permiso de compartir
-    // si secretary se lo habilitó → director comparte con departamentos completos.
     const userDeptResult = await db
       .select({ departmentId: departmentUsers.departmentId })
       .from(departmentUsers)
@@ -91,8 +113,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
     }
 
     // ── Verificación adicional para "share" en directores ────────────────────
-    // Un director solo puede compartir si el secretario le habilitó ese permiso
-    // explícitamente en director_share_permissions.
     if (requiredPermission === "share" && userRole === "director") {
       if (!userDepartmentId) {
         return res.status(403).json({

@@ -2,6 +2,7 @@ import { db } from "../../infrastructure/database/drizzle.js";
 import { or, eq, and, isNull, sql } from "drizzle-orm";
 
 import { documents } from "../../infrastructure/database/schema/documents.schema.js";
+import { professorUploadPermissions } from "../../infrastructure/database/schema/professor_upload_permissions.schema.js";
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
 import { documentPermissions } from "../../infrastructure/database/schema/document_permissions.schema.js";
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
@@ -234,7 +235,12 @@ export async function revokePermission(data: {
     );
 }
 
-export async function searchDocuments(userId: string, query: string) {
+export async function searchDocuments(
+  userId: string,
+  query: string,
+  userRole: string,
+  studentDepartmentId?: number,
+) {
   const safeLike = `%${query.replace(/[%_\\]/g, "\\$&")}%`;
 
   const result = await db.execute(sql`
@@ -285,9 +291,15 @@ export async function searchDocuments(userId: string, query: string) {
     WHERE
       d.deleted_at IS NULL
       AND (
-        d.owner_id = ${userId}
-        OR dp.user_id = ${userId}
-        OR du.user_id = ${userId}
+        ${
+          userRole === "student"
+            ? sql`(${studentDepartmentId != null} AND dp.department_id = ${studentDepartmentId ?? 0})`
+            : sql`(
+              d.owner_id = ${userId}
+              OR dp.user_id = ${userId}
+              OR du.user_id = ${userId}
+            )`
+        }
       )
       AND (
         d.title LIKE ${safeLike}
@@ -377,4 +389,22 @@ export async function countUserDocuments(
     );
 
   return result.length;
+}
+
+export async function hasProfessorUploadPermission(
+  professorId: string,
+  departmentId: number,
+): Promise<boolean> {
+  const result = await db
+    .select({ professorId: professorUploadPermissions.professorId })
+    .from(professorUploadPermissions)
+    .where(
+      and(
+        eq(professorUploadPermissions.professorId, professorId),
+        eq(professorUploadPermissions.departmentId, departmentId),
+      ),
+    )
+    .limit(1);
+
+  return result.length > 0;
 }

@@ -16,6 +16,7 @@ import {
   revokePermission,
   searchDocuments,
   updateDocumentMetadata,
+  hasProfessorUploadPermission,
 } from "./documents.repository.js";
 
 import {
@@ -53,6 +54,15 @@ export async function createNewDocument(
   });
 
   return documentId;
+}
+
+export async function verifyProfessorCanUpload(
+  professorId: string,
+  documentId: number,
+): Promise<boolean> {
+  const doc = await getDocumentById(documentId);
+  if (!doc) return false;
+  return hasProfessorUploadPermission(professorId, doc.departmentId);
 }
 
 export async function queueDocumentUpload(data: {
@@ -237,12 +247,17 @@ export async function getUserDocuments(
   };
 }
 
-export async function searchUserDocuments(userId: string, query: string) {
+export async function searchUserDocuments(
+  userId: string,
+  query: string,
+  userRole: string,
+  studentDepartmentId?: number,
+) {
   if (!query || query.length < 2) {
     return [];
   }
 
-  return searchDocuments(userId, query);
+  return searchDocuments(userId, query, userRole, studentDepartmentId);
 }
 
 export async function getDocumentAuditLogs(documentId: number) {
