@@ -17,6 +17,8 @@ import {
   searchDocuments,
   updateDocumentMetadata,
   hasProfessorUploadPermission,
+  getDocumentVersionPaths,
+  softDeleteDocument,
 } from "./documents.repository.js";
 
 import { resolveStudentDepartment } from "../students/students.service.js";
@@ -281,4 +283,31 @@ export async function searchUserDocuments(
 
 export async function getDocumentAuditLogs(documentId: number) {
   return getAuditLogsForDocument(documentId);
+}
+
+export async function deleteDocumentWithFiles(
+  documentId: number,
+  userId: string,
+): Promise<void> {
+  const filePaths = await getDocumentVersionPaths(documentId);
+
+  await softDeleteDocument(documentId);
+
+  await insertAuditLog({
+    documentId,
+    userId,
+    action: "document_deleted",
+    metadata: { filesRemoved: filePaths.length },
+  });
+
+  for (const filePath of filePaths) {
+    await fs.unlink(filePath).catch((err) => {
+      console.error(`Failed to delete file ${filePath}:`, err);
+    });
+  }
+
+  const { getDocumentFolder } =
+    await import("../../infrastructure/storage/store.service.js");
+  const folder = getDocumentFolder(documentId);
+  await fs.rmdir(folder).catch(() => null);
 }

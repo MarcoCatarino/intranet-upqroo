@@ -32,6 +32,7 @@ import {
   updateDocument,
   searchUserDocuments,
   getDocumentAuditLogs,
+  deleteDocumentWithFiles,
 } from "./documents.service.js";
 
 import {
@@ -227,14 +228,7 @@ export async function deleteDocumentController(req: Request, res: Response) {
 
   const documentId = Number(req.params.documentId);
 
-  await softDeleteDocument(documentId);
-
-  await insertAuditLog({
-    documentId,
-    userId: req.user!.id,
-    action: "document_deleted",
-    metadata: {},
-  });
+  await deleteDocumentWithFiles(documentId, req.user!.id);
 
   res.json({ message: "deleted" });
 }

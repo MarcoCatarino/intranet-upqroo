@@ -1,9 +1,9 @@
 import { Router } from "express";
 import multer from "multer";
-import os from "node:os";
 
 import { authMiddleware } from "../../middleware/auth.middleware.js";
 import { roleMiddleware } from "../../middleware/admin.middleware.js";
+import { env } from "../../config/env.js";
 
 import {
   uploadCsvController,
@@ -12,11 +12,12 @@ import {
 
 const router = Router();
 
-// Multer configurado para guardar el CSV en el directorio temporal del SO.
-// No usamos el TMP_PATH del sistema de documentos para no mezclar
-// archivos temporales de diferentes flujos.
+if (!env.TMP_PATH) {
+  throw new Error("TMP_PATH not configured");
+}
+
 const csvUpload = multer({
-  dest: os.tmpdir(),
+  dest: env.TMP_PATH,
   limits: {
     fileSize: 500 * 1024,
     files: 1,
