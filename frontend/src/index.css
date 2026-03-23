@@ -153,7 +153,11 @@ body {
   outline-offset: 2px;
 }
 
-/* Animaciones */
+/* ============================================================
+   ANIMACIONES
+   Definidas como clases CSS para evitar que Tailwind las purgue
+   en el build de producción.
+   ============================================================ */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -193,4 +197,8 @@ body {
 
 .animate-scale-in {
   animation: scale-in var(--transition-base) ease both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--transition-base) ease both;
 }

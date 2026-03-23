@@ -72,7 +72,7 @@ export function ToastProvider() {
           className={cn(
             "flex items-start gap-3 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-dialog)]",
             "p-4 border border-[var(--color-surface-border)] border-l-4",
-            "data-[state=open]:animate-slide-in-right",
+            "animate-slide-in-right",
             colors[t.type],
           )}
         >
