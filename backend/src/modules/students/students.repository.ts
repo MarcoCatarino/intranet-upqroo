@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { studentEnrollments } from "../../infrastructure/database/schema/student_enrollments.schema.js";
 
 export async function replaceEnrollments(
@@ -49,11 +49,11 @@ export async function countEnrollmentsByDepartment(
   departmentId: number,
 ): Promise<number> {
   const result = await db
-    .select({ matricula: studentEnrollments.matricula })
+    .select({ count: sql<number>`COUNT(*)` })
     .from(studentEnrollments)
     .where(eq(studentEnrollments.departmentId, departmentId));
 
-  return result.length;
+  return result[0]?.count ?? 0;
 }
 
 export async function isMatriculaEnrolled(

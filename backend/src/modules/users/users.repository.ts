@@ -1,5 +1,5 @@
 import { db } from "../../infrastructure/database/drizzle.js";
-import { eq, like, or } from "drizzle-orm";
+import { eq, like, or, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 import { users } from "../../infrastructure/database/schema/users.schema.js";
@@ -58,9 +58,10 @@ export async function listUsersByDepartment(departmentId: number) {
     .where(eq(departmentUsers.departmentId, departmentId));
 }
 
-export async function countUsers() {
-  const result = await db.select({ id: users.id }).from(users);
-  return result.length;
+export async function countUsers(): Promise<number> {
+  const result = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+
+  return result[0]?.count ?? 0;
 }
 
 export async function createManagedUser(data: {
