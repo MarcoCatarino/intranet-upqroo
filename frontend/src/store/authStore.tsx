@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types";
-import { usersApi } from "@/services/api";
+import { usersApi, authApi } from "@/services/api";
 
 interface AuthState {
   user: User | null;
@@ -9,7 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
   fetchMe: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,15 +26,20 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await usersApi.me();
           set({ user, isAuthenticated: true });
-        } catch {
+        } catch (err) {
           set({ user: null, isAuthenticated: false });
         } finally {
           set({ isLoading: false });
         }
       },
 
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
+      logout: async () => {
+        try {
+          await authApi.logout();
+        } catch {
+        } finally {
+          set({ user: null, isAuthenticated: false });
+        }
       },
     }),
     {

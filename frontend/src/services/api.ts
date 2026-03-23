@@ -34,6 +34,11 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
+
+  logout: () =>
+    request<void>("/auth/logout", {
+      method: "POST",
+    }),
 };
 
 export const usersApi = {
@@ -142,7 +147,6 @@ export const documentsApi = {
     }>(`/documents/${id}/permissions`),
   share: (data: {
     documentId: number;
-    // userId?: string;
     departmentId: number;
     permission: PermissionType;
   }) =>
