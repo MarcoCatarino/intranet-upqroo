@@ -28,12 +28,17 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await usersApi.me();
           set({ user, isAuthenticated: true, sessionVerified: true });
-        } catch {
-          set({
-            user: null,
-            isAuthenticated: false,
-            sessionVerified: true,
-          });
+        } catch (err) {
+          const message = (err as Error).message ?? "";
+
+          // 401 = token expirado o inválido — limpiar sesión silenciosamente
+          if (message.includes("401") || message.includes("Unauthorized")) {
+            set({ user: null, isAuthenticated: false, sessionVerified: true });
+            return;
+          }
+
+          set({ isLoading: false });
+          throw err;
         } finally {
           set({ isLoading: false });
         }
