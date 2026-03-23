@@ -139,9 +139,7 @@ export async function storeDocumentFile(data: {
 
     await tx
       .update(documents)
-      .set({
-        currentVersion: nextVersion,
-      })
+      .set({ currentVersion: nextVersion })
       .where(eq(documents.id, data.documentId));
   });
 
@@ -170,6 +168,13 @@ export async function updateDocument(
 export async function getPermissionsForDocument(documentId: number) {
   const permissions = await getDocumentPermissions(documentId);
 
+  const users = permissions
+    .filter((p) => p.userId)
+    .map((p) => ({
+      userId: p.userId,
+      permission: p.permission,
+    }));
+
   const departments = permissions
     .filter((p) => p.departmentId)
     .map((p) => ({
@@ -177,7 +182,7 @@ export async function getPermissionsForDocument(documentId: number) {
       permission: p.permission,
     }));
 
-  return { departments };
+  return { users, departments };
 }
 
 export async function getDocument(documentId: number) {

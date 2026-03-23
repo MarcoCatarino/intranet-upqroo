@@ -87,7 +87,7 @@ router.patch(
 router.delete(
   "/:documentId",
   authMiddleware,
-  documentRoleMiddleware("edit"),
+  documentRoleMiddleware("view"),
   deleteDocumentController,
 );
 
