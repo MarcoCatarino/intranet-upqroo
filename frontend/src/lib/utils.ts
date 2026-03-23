@@ -47,10 +47,14 @@ export function canManageDepartments(role: UserRole | undefined): boolean {
 }
 
 export function canUploadDocuments(role: UserRole | undefined): boolean {
-  return hasRole(role, "admin", "secretary", "director");
+  return hasRole(role, "admin", "secretary", "director", "assistant");
 }
 
 export function canShareDocuments(role: UserRole | undefined): boolean {
+  return hasRole(role, "admin", "secretary", "director", "assistant");
+}
+
+export function canDeleteDocuments(role: UserRole | undefined): boolean {
   return hasRole(role, "admin", "secretary", "director");
 }
 
