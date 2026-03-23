@@ -53,6 +53,7 @@ function getDocumentConfig(mimeType?: string | null) {
 
 interface DocumentTableRowProps {
   doc: Document;
+  departmentName: string;
   canEdit: boolean;
   canShare: boolean;
   onEdit: () => void;
@@ -63,6 +64,7 @@ interface DocumentTableRowProps {
 
 export function DocumentTableRow({
   doc,
+  departmentName,
   canEdit,
   canShare,
   onEdit,
@@ -110,9 +112,13 @@ export function DocumentTableRow({
         </div>
       </div>
 
-      <span className="text-xs text-[var(--color-text-muted)]">
-        Dept. {doc.departmentId}
+      <span
+        className="text-xs text-[var(--color-text-muted)] truncate"
+        title={departmentName}
+      >
+        {departmentName}
       </span>
+
       <Badge variant="orange">v{doc.currentVersion}</Badge>
       <span className="text-xs text-[var(--color-text-muted)]">
         {formatDateTime(doc.createdAt).split(",")[0]}

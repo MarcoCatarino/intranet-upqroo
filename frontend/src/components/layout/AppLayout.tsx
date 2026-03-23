@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+
 import {
   FileText,
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
   Settings,
   Search,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { ROLE_LABELS } from "@/types";
@@ -41,6 +43,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.pathname.startsWith("/documents") && searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -88,7 +99,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   UPQROO
                 </p>
                 <p className="text-[10px] text-white/50 truncate leading-tight">
-                  Intranet de Documentos
+                  Intranet
                 </p>
               </div>
             )}
@@ -166,9 +177,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
             />
             <input
+              ref={searchInputRef}
               type="search"
               placeholder="Buscar documentos…"
               className="w-full h-8 pl-9 pr-4 text-sm rounded-[var(--radius-md)] border border-[var(--color-surface-border)] bg-[var(--color-surface)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-orange)] focus:border-transparent transition-all"
+              defaultValue={
+                location.pathname.startsWith("/documents")
+                  ? (new URLSearchParams(location.search).get("q") ?? "")
+                  : ""
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const q = (e.target as HTMLInputElement).value.trim();

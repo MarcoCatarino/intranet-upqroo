@@ -25,6 +25,7 @@ import type { Department, Document } from "@/types";
 
 export function DocumentsPage() {
   const [searchParams] = useSearchParams();
+
   const {
     documents,
     total,
@@ -55,7 +56,6 @@ export function DocumentsPage() {
   const [shareDoc, setShareDoc] = useState<Document | null>(null);
 
   useEffect(() => {
-    // Si el alumno no tiene carrera asignada no hacemos fetch innecesario
     if (isUnassignedStudent) return;
 
     fetchDocuments(1);
@@ -64,6 +64,11 @@ export function DocumentsPage() {
       .then(setDepartments)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const q = searchParams.get("q") ?? "";
+    setSearchQuery(q);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -140,6 +145,10 @@ export function DocumentsPage() {
         </div>
       </div>
     );
+  }
+
+  function getDeptName(id: number, departments: Department[]): string {
+    return departments.find((d) => d.id === id)?.name ?? `Dept. ${id}`;
   }
 
   return (
@@ -220,6 +229,7 @@ export function DocumentsPage() {
                 <DocumentTableRow
                   key={doc.id}
                   doc={doc}
+                  departmentName={getDeptName(doc.departmentId, departments)}
                   canEdit={canCreate}
                   canShare={canShare}
                   onEdit={() => setEditDoc(doc)}
@@ -227,7 +237,7 @@ export function DocumentsPage() {
                   onShare={() => setShareDoc(doc)}
                   onDelete={() => handleDelete(doc)}
                 />
-              ))}
+              ))}{" "}
             </div>
           </div>
 

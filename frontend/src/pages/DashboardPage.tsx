@@ -49,6 +49,7 @@ export function DashboardPage() {
           value={isLoading ? "—" : String(total)}
           bg="bg-orange-50"
         />
+
         <StatCard
           icon={
             <Building2 size={20} className="text-[var(--color-brand-brown)]" />
@@ -57,6 +58,7 @@ export function DashboardPage() {
           value={String(departments.length)}
           bg="bg-amber-50"
         />
+
         <StatCard
           icon={
             <TrendingUp
@@ -65,13 +67,10 @@ export function DashboardPage() {
             />
           }
           label="Documentos activos"
-          value={
-            isLoading
-              ? "—"
-              : String(documents.filter((d) => !d.deletedAt).length)
-          }
+          value={isLoading ? "—" : String(total)}
           bg="bg-green-50"
         />
+
         <StatCard
           icon={<Clock size={20} className="text-[var(--color-status-info)]" />}
           label="Acceso reciente"
