@@ -1,13 +1,28 @@
 import { useEffect, useState } from "react";
-import { Users, Search } from "lucide-react";
-import { usersApi } from "@/services/api";
+import { Users, Search, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/Button";
 import { EmptyState, Spinner } from "@/components/ui/Badge";
 import { UserTableRow } from "@/components/sections/users/UserTableRow";
 import { toast } from "@/components/ui/Toast";
-import type { User } from "@/types";
+import { useAuthStore } from "@/store/authStore";
+import { CreateUserDialog } from "@/components/dialogs/CreateUserDialog";
+import type { User, UserRole } from "@/types";
+import { usersApi } from "@/services/api";
+
+const CREATABLE_ROLES: Record<string, { value: UserRole; label: string }[]> = {
+  admin: [{ value: "secretary", label: "Secretaría" }],
+  secretary: [
+    { value: "director", label: "Director" },
+    { value: "assistant", label: "Asistente" },
+  ],
+  director: [{ value: "professor", label: "Profesor" }],
+};
 
 export function UsersPage() {
+  const { user: currentUser } = useAuthStore();
+  const creatorRole = currentUser?.role ?? "";
+
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +31,9 @@ export function UsersPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const canCreate = Object.keys(CREATABLE_ROLES).includes(creatorRole);
 
   const load = async (p = 1) => {
     setIsLoading(true);
@@ -60,6 +78,13 @@ export function UsersPage() {
       <PageHeader
         title="Usuarios"
         description={`${total} usuarios registrados en el sistema`}
+        action={
+          canCreate && (
+            <Button onClick={() => setCreateOpen(true)}>
+              <UserPlus size={14} /> Nuevo usuario
+            </Button>
+          )
+        }
       />
 
       <div className="relative mb-6">
@@ -130,6 +155,15 @@ export function UsersPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {canCreate && (
+        <CreateUserDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          creatorRole={creatorRole}
+          onSuccess={() => load(1)}
+        />
       )}
     </div>
   );
