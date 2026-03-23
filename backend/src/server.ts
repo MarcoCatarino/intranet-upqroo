@@ -10,6 +10,7 @@ import { db } from "./infrastructure/database/drizzle.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 import documentRoutes from "./modules/documents/documents.routes.js";
+import studentsRoutes from "./modules/students/students.routes.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ if (cluster.isPrimary) {
   app.use("/auth", authRoutes);
   app.use("/users", usersRoutes);
   app.use("/documents", documentRoutes);
+  app.use("/students", studentsRoutes);
 
   app.get("/health", (req, res) => {
     res.json({

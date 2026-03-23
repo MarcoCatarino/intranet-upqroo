@@ -24,6 +24,20 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   student: 1,
 };
 
+export interface Enrollment {
+  matricula: string;
+  uploadedBy: string;
+  updatedAt: string;
+}
+
+export interface EnrollmentImportResult {
+  message: string;
+  inserted: number;
+  skipped: number;
+  invalid?: string[];
+  departmentId: number;
+}
+
 export interface User {
   id: string;
   email: string;

@@ -8,6 +8,8 @@ import type {
   PermissionType,
   PaginatedResponse,
   UserRole,
+  EnrollmentImportResult,
+  Enrollment,
 } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
@@ -67,12 +69,15 @@ export const usersApi = {
 
 export const departmentsApi = {
   list: () => request<Department[]>("/departments"),
+
   get: (id: number) => request<Department>(`/departments/${id}`),
+
   create: (data: { name: string; slug: string; parentId?: number }) =>
     request<Department>("/departments", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   update: (id: number, data: { name?: string; slug?: string }) =>
     request(`/departments/${id}`, {
       method: "PATCH",
@@ -80,15 +85,18 @@ export const departmentsApi = {
     }),
 
   delete: (id: number) => request(`/departments/${id}`, { method: "DELETE" }),
+
   addUser: (data: { departmentId: number; userId: string; role: string }) =>
     request("/departments/users", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   removeUser: (departmentId: number, userId: string) =>
     request(`/departments/${departmentId}/user/${userId}`, {
       method: "DELETE",
     }),
+
   users: (departmentId: number) =>
     request<User[]>(`/departments/${departmentId}/users`),
 };
@@ -98,9 +106,12 @@ export const documentsApi = {
     request<PaginatedResponse<Document>>(
       `/documents?page=${page}&limit=${limit}`,
     ),
+
   get: (id: number) => request<Document>(`/documents/${id}`),
+
   search: (q: string) =>
     request<Document[]>(`/documents/search?q=${encodeURIComponent(q)}`),
+
   create: (data: {
     title: string;
     description?: string;
@@ -119,7 +130,9 @@ export const documentsApi = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+
   delete: (id: number) => request(`/documents/${id}`, { method: "DELETE" }),
+
   upload: (documentId: number, file: File) => {
     const form = new FormData();
     form.append("file", file);
@@ -138,19 +151,23 @@ export const documentsApi = {
       return res.json();
     });
   },
+
   versions: (id: number) =>
     request<DocumentVersion[]>(`/documents/${id}/versions`),
+
   permissions: (id: number) =>
     request<{
       users: Partial<DocumentPermission>[];
       departments: Partial<DocumentPermission>[];
     }>(`/documents/${id}/permissions`),
+
   share: (data: {
     documentId: number;
     departmentId: number;
     permission: PermissionType;
   }) =>
     request("/documents/share", { method: "POST", body: JSON.stringify(data) }),
+
   revokePermission: (
     documentId: number,
     data: { userId?: string; departmentId?: number },
@@ -159,7 +176,42 @@ export const documentsApi = {
       method: "DELETE",
       body: JSON.stringify(data),
     }),
+
   auditLogs: (id: number) => request<AuditLog[]>(`/documents/${id}/audit`),
+
   downloadUrl: (documentId: number, version: number) =>
     `${BASE_URL}/documents/${documentId}/version/${version}`,
+};
+
+export const studentsApi = {
+  uploadCsv: (
+    file: File,
+    departmentId: number,
+  ): Promise<EnrollmentImportResult> => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("departmentId", String(departmentId));
+
+    return fetch(`${BASE_URL}/students/upload-csv`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res
+          .json()
+          .catch(() => ({ message: "Error al subir el CSV" }));
+        throw new Error(err.message);
+      }
+      return res.json();
+    });
+  },
+
+  getEnrollments: (
+    departmentId: number,
+  ): Promise<{
+    enrollments: Enrollment[];
+    total: number;
+    departmentId: number;
+  }> => request(`/students/${departmentId}/enrollments`),
 };
