@@ -1,7 +1,7 @@
 import {
   mysqlTable,
   varchar,
-  bigint,
+  int,
   timestamp,
   primaryKey,
 } from "drizzle-orm/mysql-core";
@@ -11,7 +11,7 @@ export const studentEnrollments = mysqlTable(
   {
     matricula: varchar("matricula", { length: 20 }).notNull(),
 
-    departmentId: bigint("department_id", { mode: "number" }).notNull(),
+    departmentId: int("department_id", { unsigned: true }).notNull(),
 
     uploadedBy: varchar("uploaded_by", { length: 36 }).notNull(),
 

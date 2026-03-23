@@ -1,13 +1,16 @@
 import {
   mysqlTable,
   bigint,
+  int,
   varchar,
   timestamp,
   text,
 } from "drizzle-orm/mysql-core";
 
 export const documents = mysqlTable("documents", {
-  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  id: bigint("id", { mode: "number", unsigned: true })
+    .primaryKey()
+    .autoincrement(),
 
   title: varchar("title", { length: 255 }).notNull(),
 
@@ -15,9 +18,9 @@ export const documents = mysqlTable("documents", {
 
   ownerId: varchar("owner_id", { length: 36 }).notNull(),
 
-  departmentId: bigint("department_id", { mode: "number" }).notNull(),
+  departmentId: int("department_id", { unsigned: true }).notNull(),
 
-  currentVersion: bigint("current_version", { mode: "number" })
+  currentVersion: int("current_version", { unsigned: true })
     .notNull()
     .default(1),
 
