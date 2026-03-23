@@ -49,6 +49,8 @@ export interface Document {
   ownerId: string;
   departmentId: number;
   currentVersion: number;
+  // mimeType de la versión actual — usado para mostrar el ícono correcto
+  mimeType: string | null;
   createdAt: string;
   deletedAt: string | null;
 }
@@ -105,7 +107,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-// API response helpers
 export interface ApiError {
   message: string;
 }

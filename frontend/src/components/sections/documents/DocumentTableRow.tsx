@@ -14,22 +14,41 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDateTime, cn } from "@/lib/utils";
 import type { Document } from "@/types";
 
-function getDocumentIcon(title: string) {
-  const lower = title.toLowerCase();
-  if (lower.endsWith(".xlsx") || lower.includes("excel")) {
-    return {
-      icon: FileSpreadsheet,
-      color: "text-green-500",
-      bg: "bg-green-50",
-    };
-  }
-  if (lower.endsWith(".pptx") || lower.includes("presentación")) {
-    return { icon: Presentation, color: "text-orange-500", bg: "bg-orange-50" };
-  }
-  if (lower.endsWith(".docx") || lower.includes("word")) {
-    return { icon: FileText, color: "text-blue-500", bg: "bg-blue-50" };
-  }
-  return { icon: FileText, color: "text-red-400", bg: "bg-red-50" };
+const MIME_TYPE_CONFIG: Record<
+  string,
+  { icon: React.ElementType; color: string; bg: string }
+> = {
+  "application/pdf": {
+    icon: FileText,
+    color: "text-red-400",
+    bg: "bg-red-50",
+  },
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+    icon: FileText,
+    color: "text-blue-500",
+    bg: "bg-blue-50",
+  },
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+    icon: FileSpreadsheet,
+    color: "text-green-500",
+    bg: "bg-green-50",
+  },
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+    icon: Presentation,
+    color: "text-orange-500",
+    bg: "bg-orange-50",
+  },
+};
+
+const DEFAULT_CONFIG = {
+  icon: FileText,
+  color: "text-red-400",
+  bg: "bg-red-50",
+};
+
+function getDocumentConfig(mimeType?: string | null) {
+  if (!mimeType) return DEFAULT_CONFIG;
+  return MIME_TYPE_CONFIG[mimeType] ?? DEFAULT_CONFIG;
 }
 
 interface DocumentTableRowProps {
@@ -51,7 +70,7 @@ export function DocumentTableRow({
   onShare,
   onDelete,
 }: DocumentTableRowProps) {
-  const { icon: DocIcon, color, bg } = getDocumentIcon(doc.title);
+  const { icon: DocIcon, color, bg } = getDocumentConfig(doc.mimeType);
 
   const actions = [
     canEdit && { icon: Pencil, label: "Editar", action: onEdit },
