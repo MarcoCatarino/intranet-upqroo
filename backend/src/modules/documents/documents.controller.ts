@@ -35,11 +35,7 @@ import {
   deleteDocumentWithFiles,
 } from "./documents.service.js";
 
-import {
-  getDocumentVersions,
-  softDeleteDocument,
-} from "./documents.repository.js";
-import { insertAuditLog } from "./documents.audit.repository.js";
+import { getDocumentVersions } from "./documents.repository.js";
 import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
 
 export async function createDocumentController(req: Request, res: Response) {

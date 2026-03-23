@@ -25,6 +25,7 @@ import { resolveStudentDepartment } from "../students/students.service.js";
 
 import {
   ensureDocumentFolder,
+  getDocumentFolder,
   getDocumentVersionPath,
 } from "../../infrastructure/storage/store.service.js";
 
@@ -306,8 +307,6 @@ export async function deleteDocumentWithFiles(
     });
   }
 
-  const { getDocumentFolder } =
-    await import("../../infrastructure/storage/store.service.js");
   const folder = getDocumentFolder(documentId);
   await fs.rmdir(folder).catch(() => null);
 }
