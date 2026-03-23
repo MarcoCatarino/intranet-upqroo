@@ -3,13 +3,17 @@ import fs from "node:fs/promises";
 
 import { env } from "../../config/env.js";
 
+if (!env.STORAGE_PATH) {
+  throw new Error("STORAGE_PATH is not configured in environment variables");
+}
+
 const STORAGE_PATH = env.STORAGE_PATH;
 
 export function getDocumentFolder(documentId: number) {
   const group = Math.floor(documentId / 100);
 
   return path.join(
-    STORAGE_PATH! as string,
+    STORAGE_PATH,
     "documents",
     String(group),
     String(documentId),
