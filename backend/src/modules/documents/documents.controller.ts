@@ -13,6 +13,14 @@ import {
 } from "./documents.validators.js";
 
 import {
+  canEditDocument,
+  canShareDocument,
+  canDeleteDocument,
+  canUploadDocument,
+  canProfessorUpload,
+} from "./documents.domain.js";
+
+import {
   createNewDocument,
   queueDocumentUpload,
   shareDocument,
@@ -30,8 +38,17 @@ import {
   softDeleteDocument,
 } from "./documents.repository.js";
 import { insertAuditLog } from "./documents.audit.repository.js";
+import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
 
 export async function createDocumentController(req: Request, res: Response) {
+  const userRole = req.user!.role as UserRole;
+
+  if (!canUploadDocument(userRole)) {
+    return res
+      .status(403)
+      .json({ message: "No tienes permiso para crear documentos" });
+  }
+
   const data = createDocumentSchema.parse(req.body);
 
   const documentId = await createNewDocument(
@@ -41,18 +58,22 @@ export async function createDocumentController(req: Request, res: Response) {
     data.description,
   );
 
-  res.json({
-    documentId,
-  });
+  res.json({ documentId });
 }
 
 export async function uploadDocumentController(req: Request, res: Response) {
+  const userRole = req.user!.role as UserRole;
+
+  if (!canProfessorUpload(userRole, true)) {
+    return res
+      .status(403)
+      .json({ message: "No tienes permiso para subir archivos" });
+  }
+
   const file = req.file;
 
   if (!file) {
-    return res.status(400).json({
-      message: "File required",
-    });
+    return res.status(400).json({ message: "File required" });
   }
 
   const documentId = Number(req.body.documentId);
@@ -65,26 +86,28 @@ export async function uploadDocumentController(req: Request, res: Response) {
     uploadedBy: req.user!.id,
   });
 
-  res.json({
-    message: "uploaded and queued",
-  });
+  res.json({ message: "uploaded and queued" });
 }
 
 export async function updateDocumentController(req: Request, res: Response) {
-  const documentId = Number(req.params.documentId);
+  const userRole = req.user!.role as UserRole;
 
+  if (!canEditDocument(userRole)) {
+    return res
+      .status(403)
+      .json({ message: "No tienes permiso para editar documentos" });
+  }
+
+  const documentId = Number(req.params.documentId);
   const data = updateDocumentSchema.parse(req.body);
 
   await updateDocument(documentId, req.user!.id, data);
 
-  res.json({
-    message: "document updated",
-  });
+  res.json({ message: "document updated" });
 }
 
 export async function versionsController(req: Request, res: Response) {
   const versions = await getDocumentVersions(Number(req.params.documentId));
-
   res.json(versions);
 }
 
@@ -93,9 +116,7 @@ export async function documentPermissionsController(
   res: Response,
 ) {
   const documentId = Number(req.params.documentId);
-
   const permissions = await getPermissionsForDocument(documentId);
-
   res.json(permissions);
 }
 
@@ -118,15 +139,21 @@ export async function getDocumentController(req: Request, res: Response) {
   const document = await getDocument(documentId);
 
   if (!document) {
-    return res.status(404).json({
-      message: "document not found",
-    });
+    return res.status(404).json({ message: "document not found" });
   }
 
   res.json(document);
 }
 
 export async function shareDocumentController(req: Request, res: Response) {
+  const userRole = req.user!.role as UserRole;
+
+  if (!canShareDocument(userRole)) {
+    return res
+      .status(403)
+      .json({ message: "No tienes permiso para compartir documentos" });
+  }
+
   const { documentId, departmentId, permission } = shareDocumentSchema.parse(
     req.body,
   );
@@ -178,6 +205,14 @@ export async function downloadDocumentController(req: Request, res: Response) {
 }
 
 export async function deleteDocumentController(req: Request, res: Response) {
+  const userRole = req.user!.role as UserRole;
+
+  if (!canDeleteDocument(userRole)) {
+    return res
+      .status(403)
+      .json({ message: "No tienes permiso para eliminar documentos" });
+  }
+
   const documentId = Number(req.params.documentId);
 
   await softDeleteDocument(documentId);
@@ -194,16 +229,12 @@ export async function deleteDocumentController(req: Request, res: Response) {
 
 export async function searchDocumentsController(req: Request, res: Response) {
   const query = String(req.query.q || "");
-
   const results = await searchUserDocuments(req.user!.id, query);
-
   res.json(results);
 }
 
 export async function getAuditLogsController(req: Request, res: Response) {
   const documentId = Number(req.params.documentId);
-
   const logs = await getDocumentAuditLogs(documentId);
-
   res.json(logs);
 }
