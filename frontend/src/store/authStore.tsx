@@ -7,6 +7,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  sessionVerified: boolean;
   setUser: (user: User | null) => void;
   fetchMe: () => Promise<void>;
   logout: () => Promise<void>;
@@ -18,6 +19,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       isAuthenticated: false,
+      sessionVerified: false,
 
       setUser: (user) => set({ user, isAuthenticated: !!user }),
 
@@ -25,9 +27,13 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const user = await usersApi.me();
-          set({ user, isAuthenticated: true });
-        } catch (err) {
-          set({ user: null, isAuthenticated: false });
+          set({ user, isAuthenticated: true, sessionVerified: true });
+        } catch {
+          set({
+            user: null,
+            isAuthenticated: false,
+            sessionVerified: true,
+          });
         } finally {
           set({ isLoading: false });
         }
@@ -38,7 +44,11 @@ export const useAuthStore = create<AuthState>()(
           await authApi.logout();
         } catch {
         } finally {
-          set({ user: null, isAuthenticated: false });
+          set({
+            user: null,
+            isAuthenticated: false,
+            sessionVerified: false,
+          });
         }
       },
     }),

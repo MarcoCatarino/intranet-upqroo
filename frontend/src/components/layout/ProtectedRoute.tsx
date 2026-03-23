@@ -5,16 +5,17 @@ import { Spinner } from "@/components/ui/Badge";
 import { AppLayout } from "./AppLayout";
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isLoading, fetchMe, user } = useAuthStore();
+  const { isAuthenticated, isLoading, fetchMe, sessionVerified } =
+    useAuthStore();
   const [serverError, setServerError] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !user) {
+    if (!sessionVerified) {
       fetchMe().catch(() => setServerError(true));
     }
   }, []);
 
-  if (isLoading) {
+  if (isLoading || !sessionVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface)]">
         <div className="flex flex-col items-center gap-3">
