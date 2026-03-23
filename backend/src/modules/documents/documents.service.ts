@@ -115,6 +115,7 @@ export async function storeDocumentFile(data: {
   const fileHash = await calculateFileHash(data.tmpPath);
 
   let finalPath: string | null = null;
+  let dbSucceeded = false;
 
   try {
     await db.transaction(async (tx) => {
@@ -157,9 +158,11 @@ export async function storeDocumentFile(data: {
         .where(eq(documents.id, data.documentId));
     });
 
+    dbSucceeded = true;
+
     await fs.rename(data.tmpPath, finalPath!);
   } catch (err) {
-    if (finalPath) {
+    if (dbSucceeded && finalPath) {
       await fs.unlink(data.tmpPath).catch(() => null);
     }
     throw err;
@@ -238,7 +241,6 @@ export async function revokeDocumentPermission(data: {
   });
 }
 
-// Reemplazar getUserDocuments completo
 export async function getUserDocuments(
   userId: string,
   userEmail: string,
