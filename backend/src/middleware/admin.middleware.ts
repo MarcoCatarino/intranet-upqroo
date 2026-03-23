@@ -6,22 +6,25 @@ import {
   UserRole,
 } from "../infrastructure/database/schema/users.schema.js";
 
-/**
- * Middleware de roles jerárquicos.
- * Recibe uno o varios roles permitidos.
- *
- * Uso:
- *   roleMiddleware("admin")
- *   roleMiddleware("admin", "secretary")
- *   roleMiddleware("admin", "secretary", "director")
- */
+// Roles que no están en DB — no se buscan
+const EPHEMERAL_ROLES: UserRole[] = ["student", "professor"];
 
 export function roleMiddleware(...allowedRoles: UserRole[]) {
   return async function (req: Request, res: Response, next: NextFunction) {
     const userId = req.user?.id;
+    const jwtRole = req.user?.role;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (jwtRole && EPHEMERAL_ROLES.includes(jwtRole)) {
+      if (!allowedRoles.includes(jwtRole)) {
+        return res.status(403).json({
+          message: `Access restricted to: ${allowedRoles.join(", ")}`,
+        });
+      }
+      return next();
     }
 
     const result = await db

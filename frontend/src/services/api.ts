@@ -7,6 +7,7 @@ import type {
   AuditLog,
   PermissionType,
   PaginatedResponse,
+  UserRole,
 } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
@@ -37,12 +38,26 @@ export const authApi = {
 
 export const usersApi = {
   me: () => request<User>("/users/me"),
+
   list: (page = 1, limit = 20) =>
     request<PaginatedResponse<User>>(`/users?page=${page}&limit=${limit}`),
+
   search: (q: string) =>
     request<User[]>(`/users/search?q=${encodeURIComponent(q)}`),
+
   byDepartment: (departmentId: number) =>
     request<User[]>(`/users/department/${departmentId}`),
+
+  create: (data: {
+    name: string;
+    email: string;
+    role: UserRole;
+    departmentId?: number;
+  }) =>
+    request<{ userId: string }>("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 export const departmentsApi = {
@@ -90,6 +105,7 @@ export const documentsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   update: (
     id: number,
     data: { title?: string; description?: string; departmentId?: number },
@@ -126,8 +142,8 @@ export const documentsApi = {
     }>(`/documents/${id}/permissions`),
   share: (data: {
     documentId: number;
-    userId?: string;
-    departmentId?: number;
+    // userId?: string;
+    departmentId: number;
     permission: PermissionType;
   }) =>
     request("/documents/share", { method: "POST", body: JSON.stringify(data) }),

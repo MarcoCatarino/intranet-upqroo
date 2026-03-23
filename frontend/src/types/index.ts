@@ -38,6 +38,7 @@ export interface Department {
   name: string;
   slug: string;
   parentId: number | null;
+  deletedAt: string | null;
   createdAt: string;
 }
 
