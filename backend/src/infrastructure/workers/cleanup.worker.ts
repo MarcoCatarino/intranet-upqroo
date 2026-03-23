@@ -4,7 +4,7 @@ import { env } from "../../config/env.js";
 
 const TMP_DIR = env.TMP_PATH!;
 
-const MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 horas
+const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const INTERVAL_MS = 60 * 60 * 1000;
 
@@ -15,6 +15,8 @@ export async function cleanTmpFiles() {
     let cleaned = 0;
 
     for (const file of files) {
+      if (!file.startsWith("tmp-")) continue;
+
       const filePath = path.join(TMP_DIR, file);
 
       try {
@@ -25,7 +27,7 @@ export async function cleanTmpFiles() {
           await fs.unlink(filePath);
           cleaned++;
           console.log(
-            `Cleaned tmp file: ${file} (age: ${Math.round(ageMs / 60000)}min)`,
+            `Cleaned tmp file: ${file} (age: ${Math.round(ageMs / 3600000)}h)`,
           );
         }
       } catch {
@@ -41,7 +43,7 @@ export async function cleanTmpFiles() {
 }
 
 export function startCleanupScheduler() {
-  console.log("Tmp cleanup scheduler started (runs every hour)");
+  console.log("Tmp cleanup scheduler started (runs every hour, max age 24h)");
 
   cleanTmpFiles();
 
