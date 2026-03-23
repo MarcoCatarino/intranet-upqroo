@@ -128,6 +128,7 @@ export async function listDocumentsController(req: Request, res: Response) {
     req.user!.role ?? "student",
     page,
     limit,
+    req.user!.departmentId,
   );
 
   res.json(result);

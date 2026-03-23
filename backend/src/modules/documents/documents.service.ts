@@ -221,10 +221,11 @@ export async function getUserDocuments(
   userRole: string,
   page: number,
   limit: number,
+  studentDepartmentId?: number,
 ) {
   const [data, total] = await Promise.all([
-    listDocuments(userId, userRole, page, limit),
-    countUserDocuments(userId, userRole),
+    listDocuments(userId, userRole, page, limit, studentDepartmentId),
+    countUserDocuments(userId, userRole, studentDepartmentId),
   ]);
 
   return {

@@ -110,15 +110,35 @@ export async function listDocuments(
   userRole: string,
   page: number,
   limit: number,
+  studentDepartmentId?: number,
 ) {
   const offset = (page - 1) * limit;
 
-  // Admin ve todo
   if (userRole === "admin") {
     return db
       .selectDistinct(documentWithMimeType)
       .from(documents)
       .where(isNull(documents.deletedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  if (userRole === "student") {
+    if (!studentDepartmentId) return [];
+
+    return db
+      .selectDistinct(documentWithMimeType)
+      .from(documents)
+      .innerJoin(
+        documentPermissions,
+        eq(documentPermissions.documentId, documents.id),
+      )
+      .where(
+        and(
+          isNull(documents.deletedAt),
+          eq(documentPermissions.departmentId, studentDepartmentId),
+        ),
+      )
       .limit(limit)
       .offset(offset);
   }
@@ -139,14 +159,11 @@ export async function listDocuments(
         isNull(documents.deletedAt),
         or(
           eq(documents.ownerId, userId),
-
           eq(documentPermissions.userId, userId),
-
           and(
             eq(departmentUsers.userId, userId),
             eq(documentPermissions.departmentId, departmentUsers.departmentId),
           ),
-
           userRole === "secretary"
             ? sql`documents.department_id IN (
                 SELECT id FROM departments
@@ -287,12 +304,36 @@ export async function searchDocuments(userId: string, query: string) {
   return result[0];
 }
 
-export async function countUserDocuments(userId: string, userRole: string) {
+export async function countUserDocuments(
+  userId: string,
+  userRole: string,
+  studentDepartmentId?: number,
+) {
   if (userRole === "admin") {
     const result = await db
       .select({ id: documents.id })
       .from(documents)
       .where(isNull(documents.deletedAt));
+
+    return result.length;
+  }
+
+  if (userRole === "student") {
+    if (!studentDepartmentId) return 0;
+
+    const result = await db
+      .selectDistinct({ id: documents.id })
+      .from(documents)
+      .innerJoin(
+        documentPermissions,
+        eq(documentPermissions.documentId, documents.id),
+      )
+      .where(
+        and(
+          isNull(documents.deletedAt),
+          eq(documentPermissions.departmentId, studentDepartmentId),
+        ),
+      );
 
     return result.length;
   }
