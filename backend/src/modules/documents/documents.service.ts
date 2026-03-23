@@ -19,6 +19,8 @@ import {
   hasProfessorUploadPermission,
 } from "./documents.repository.js";
 
+import { resolveStudentDepartment } from "../students/students.service.js";
+
 import {
   ensureDocumentFolder,
   getDocumentVersionPath,
@@ -30,8 +32,9 @@ import {
   insertAuditLog,
   getAuditLogsForDocument,
 } from "./documents.audit.repository.js";
-import { env } from "../../config/env.js";
 import { calculateFileHash } from "../../infrastructure/storage/hash.service.js";
+
+import { env } from "../../config/env.js";
 
 export async function createNewDocument(
   title: string,
@@ -108,50 +111,56 @@ export async function storeDocumentFile(data: {
 
   const fileHash = await calculateFileHash(data.tmpPath);
 
-  await db.transaction(async (tx) => {
-    const result = await tx
-      .select({
-        maxVersion: sql<number>`MAX(${documentVersions.version})`,
-        versionCount: sql<number>`COUNT(${documentVersions.id})`,
-      })
-      .from(documentVersions)
-      .where(eq(documentVersions.documentId, data.documentId))
-      .for("update");
+  let finalPath: string | null = null;
 
-    const currentCount = result[0]?.versionCount ?? 0;
-    const maxVersions = env.DOCUMENTS.MAX_VERSIONS;
+  try {
+    await db.transaction(async (tx) => {
+      const result = await tx
+        .select({
+          maxVersion: sql<number>`MAX(${documentVersions.version})`,
+          versionCount: sql<number>`COUNT(${documentVersions.id})`,
+        })
+        .from(documentVersions)
+        .where(eq(documentVersions.documentId, data.documentId))
+        .for("update");
 
-    if (currentCount >= maxVersions) {
-      await fs.unlink(data.tmpPath).catch(() => null);
+      const currentCount = result[0]?.versionCount ?? 0;
+      const maxVersions = env.DOCUMENTS.MAX_VERSIONS;
 
-      throw new Error(
-        `Document has reached the maximum of ${maxVersions} versions`,
-      );
-    }
+      if (currentCount >= maxVersions) {
+        throw new Error(
+          `Document has reached the maximum of ${maxVersions} versions`,
+        );
+      }
 
-    const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
+      const nextVersion = (result[0]?.maxVersion ?? 0) + 1;
+      const ext = path.extname(data.tmpPath);
 
-    const ext = path.extname(data.tmpPath);
+      finalPath = getDocumentVersionPath(data.documentId, nextVersion, ext);
 
-    const finalPath = getDocumentVersionPath(data.documentId, nextVersion, ext);
+      await tx.insert(documentVersions).values({
+        documentId: data.documentId,
+        version: nextVersion,
+        filePath: finalPath,
+        mimeType: data.mimeType,
+        fileSize: data.fileSize,
+        fileHash,
+        uploadedBy: data.uploadedBy,
+      });
 
-    await fs.rename(data.tmpPath, finalPath);
-
-    await tx.insert(documentVersions).values({
-      documentId: data.documentId,
-      version: nextVersion,
-      filePath: finalPath,
-      mimeType: data.mimeType,
-      fileSize: data.fileSize,
-      fileHash,
-      uploadedBy: data.uploadedBy,
+      await tx
+        .update(documents)
+        .set({ currentVersion: nextVersion })
+        .where(eq(documents.id, data.documentId));
     });
 
-    await tx
-      .update(documents)
-      .set({ currentVersion: nextVersion })
-      .where(eq(documents.id, data.documentId));
-  });
+    await fs.rename(data.tmpPath, finalPath!);
+  } catch (err) {
+    if (finalPath) {
+      await fs.unlink(data.tmpPath).catch(() => null);
+    }
+    throw err;
+  }
 
   await fs.unlink(data.tmpPath).catch(() => null);
 }
@@ -226,13 +235,23 @@ export async function revokeDocumentPermission(data: {
   });
 }
 
+// Reemplazar getUserDocuments completo
 export async function getUserDocuments(
   userId: string,
+  userEmail: string,
   userRole: string,
   page: number,
   limit: number,
-  studentDepartmentId?: number,
+  jwtDepartmentId?: number,
 ) {
+  let studentDepartmentId = jwtDepartmentId;
+
+  if (userRole === "student") {
+    const matricula = userEmail.split("@")[0];
+    const freshDepartmentId = await resolveStudentDepartment(matricula);
+    studentDepartmentId = freshDepartmentId ?? undefined;
+  }
+
   const [data, total] = await Promise.all([
     listDocuments(userId, userRole, page, limit, studentDepartmentId),
     countUserDocuments(userId, userRole, studentDepartmentId),

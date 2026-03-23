@@ -135,6 +135,7 @@ export async function listDocumentsController(req: Request, res: Response) {
 
   const result = await getUserDocuments(
     req.user!.id,
+    req.user!.email,
     req.user!.role ?? "student",
     page,
     limit,
