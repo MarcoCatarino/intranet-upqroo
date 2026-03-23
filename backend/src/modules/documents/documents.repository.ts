@@ -42,9 +42,7 @@ export async function userHasDocumentAccess(
         eq(documents.id, documentId),
         or(
           eq(documents.ownerId, userId),
-
           eq(documentPermissions.userId, userId),
-
           and(
             eq(documentPermissions.departmentId, departmentUsers.departmentId),
             eq(departmentUsers.userId, userId),
@@ -89,6 +87,25 @@ export async function createDocument(data: {
   return result[0].id;
 }
 
+// Selección base de documentos con mimeType de la versión actual via subquery
+const documentWithMimeType = {
+  id: documents.id,
+  title: documents.title,
+  description: documents.description,
+  ownerId: documents.ownerId,
+  departmentId: documents.departmentId,
+  currentVersion: documents.currentVersion,
+  createdAt: documents.createdAt,
+  deletedAt: documents.deletedAt,
+  mimeType: sql<string | null>`(
+    SELECT mime_type
+    FROM document_versions
+    WHERE document_id = ${documents.id}
+      AND version = ${documents.currentVersion}
+    LIMIT 1
+  )`.as("mime_type"),
+};
+
 export async function listDocuments(
   userId: string,
   userRole: string,
@@ -100,18 +117,15 @@ export async function listDocuments(
   // Admin ve todo
   if (userRole === "admin") {
     return db
-      .selectDistinct()
+      .selectDistinct(documentWithMimeType)
       .from(documents)
       .where(isNull(documents.deletedAt))
       .limit(limit)
       .offset(offset);
   }
 
-  // Secretary ve todos los documentos de su secretaría y sus departamentos hijos
-  // Director ve solo su departamento
-  // Professor y student ven solo lo que les comparten
   return db
-    .selectDistinct()
+    .selectDistinct(documentWithMimeType)
     .from(documents)
     .leftJoin(
       documentPermissions,
@@ -159,19 +173,18 @@ export async function updateDocumentMetadata(
   data: {
     title?: string;
     departmentId?: number;
+    description?: string;
   },
 ) {
   await db
     .update(documents)
-    .set({
-      ...data,
-    })
+    .set({ ...data })
     .where(eq(documents.id, documentId));
 }
 
 export async function getDocumentById(documentId: number) {
   const result = await db
-    .select()
+    .select(documentWithMimeType)
     .from(documents)
     .where(and(eq(documents.id, documentId), isNull(documents.deletedAt)));
 
@@ -181,9 +194,7 @@ export async function getDocumentById(documentId: number) {
 export async function softDeleteDocument(documentId: number) {
   await db
     .update(documents)
-    .set({
-      deletedAt: new Date(),
-    })
+    .set({ deletedAt: new Date() })
     .where(eq(documents.id, documentId));
 }
 
@@ -219,7 +230,14 @@ export async function searchDocuments(userId: string, query: string) {
       d.department_id,
       d.current_version,
       d.created_at,
-
+      d.deleted_at,
+      (
+        SELECT mime_type
+        FROM document_versions
+        WHERE document_id = d.id
+          AND version = d.current_version
+        LIMIT 1
+      ) AS mime_type,
       (
         CASE
           WHEN MATCH(d.title, d.description)
@@ -256,10 +274,8 @@ export async function searchDocuments(userId: string, query: string) {
         OR du.user_id = ${userId}
       )
       AND (
-        -- Coincidencia parcial por LIKE
         d.title LIKE ${safeLike}
         OR d.description LIKE ${safeLike}
-        -- Coincidencia semántica por FULLTEXT
         OR MATCH(d.title, d.description)
            AGAINST (${query} IN NATURAL LANGUAGE MODE)
       )
