@@ -87,7 +87,6 @@ export async function createDocument(data: {
   return result[0].id;
 }
 
-// Selección base de documentos con mimeType de la versión actual via subquery
 const documentWithMimeType = {
   id: documents.id,
   title: documents.title,
@@ -103,7 +102,7 @@ const documentWithMimeType = {
     WHERE document_id = ${documents.id}
       AND version = ${documents.currentVersion}
     LIMIT 1
-  )`.as("mime_type"),
+  )`.as("mimeType"),
 };
 
 export async function listDocuments(
@@ -226,18 +225,18 @@ export async function searchDocuments(userId: string, query: string) {
       d.id,
       d.title,
       d.description,
-      d.owner_id,
-      d.department_id,
-      d.current_version,
-      d.created_at,
-      d.deleted_at,
+      d.owner_id        AS ownerId,
+      d.department_id   AS departmentId,
+      d.current_version AS currentVersion,
+      d.created_at      AS createdAt,
+      d.deleted_at      AS deletedAt,
       (
         SELECT mime_type
         FROM document_versions
         WHERE document_id = d.id
           AND version = d.current_version
         LIMIT 1
-      ) AS mime_type,
+      ) AS mimeType,
       (
         CASE
           WHEN MATCH(d.title, d.description)
