@@ -31,6 +31,7 @@ export interface User {
   avatarUrl: string | null;
   role: UserRole;
   createdAt: string;
+  departmentId?: number | null;
 }
 
 export interface Department {
@@ -49,7 +50,6 @@ export interface Document {
   ownerId: string;
   departmentId: number;
   currentVersion: number;
-  // mimeType de la versión actual — usado para mostrar el ícono correcto
   mimeType: string | null;
   createdAt: string;
   deletedAt: string | null;

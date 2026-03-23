@@ -32,6 +32,7 @@ export async function getMyProfileController(req: Request, res: Response) {
       role: req.user!.role,
       avatarUrl: null,
       createdAt: new Date().toISOString(),
+      departmentId: req.user!.departmentId ?? null,
     });
   }
 

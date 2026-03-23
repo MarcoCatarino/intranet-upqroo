@@ -6,6 +6,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
 } from "lucide-react";
 import { useDocumentsStore } from "@/store/documentsStore";
 import { useAuthStore } from "@/store/authStore";
@@ -38,8 +39,10 @@ export function DocumentsPage() {
   const canCreate = canUploadDocuments(user?.role);
   const canShare = canShareDocuments(user?.role);
 
-  // Alumnos y profesores ven la vista agrupada por departamento
   const isReadOnlyRole = user?.role === "student" || user?.role === "professor";
+
+  const isUnassignedStudent =
+    user?.role === "student" && user?.departmentId == null;
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
@@ -52,8 +55,10 @@ export function DocumentsPage() {
   const [shareDoc, setShareDoc] = useState<Document | null>(null);
 
   useEffect(() => {
+    // Si el alumno no tiene carrera asignada no hacemos fetch innecesario
+    if (isUnassignedStudent) return;
+
     fetchDocuments(1);
-    // Cargar departamentos para la vista agrupada
     departmentsApi
       .list()
       .then(setDepartments)
@@ -93,12 +98,49 @@ export function DocumentsPage() {
   const displayDocs = searchResults ?? documents;
   const isSearchMode = searchQuery.trim().length > 0;
 
-  // Texto del empty state según rol
   const emptyDescription = isSearchMode
     ? `No se encontraron documentos para "${searchQuery}"`
     : isReadOnlyRole
       ? "No tienes documentos compartidos contigo aún."
       : "Crea tu primer documento con el botón superior.";
+
+  // ── Alumno sin carrera asignada ──────────────────────────────────────────
+  if (isUnassignedStudent) {
+    return (
+      <div className="p-[var(--content-padding)] max-w-[var(--content-max-width)] animate-fade-in">
+        <PageHeader
+          title="Documentos"
+          description="Acceso a documentos de tu carrera"
+        />
+        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-8">
+            <div className="w-14 h-14 rounded-[var(--radius-xl)] bg-amber-50 flex items-center justify-center">
+              <GraduationCap
+                size={28}
+                className="text-[var(--color-status-warning)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-base font-medium text-[var(--color-text-primary)]">
+                No estás asignado a ninguna carrera
+              </p>
+              <p className="text-sm text-[var(--color-text-muted)] max-w-sm">
+                Para acceder a los documentos de tu programa, acércate al
+                Director de tu carrera y solicítale que te registre en el
+                sistema.
+              </p>
+            </div>
+            <div className="mt-2 px-4 py-3 bg-[var(--color-surface-secondary)] rounded-[var(--radius-lg)] text-xs text-[var(--color-text-muted)] max-w-sm">
+              Tu matrícula de acceso es{" "}
+              <span className="font-mono font-medium text-[var(--color-text-secondary)]">
+                {user?.email?.split("@")[0]}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-[var(--content-padding)] max-w-[var(--content-max-width)] animate-fade-in">
@@ -156,13 +198,11 @@ export function DocumentsPage() {
           />
         </div>
       ) : isReadOnlyRole && !isSearchMode ? (
-        /* Vista agrupada por departamento para alumnos y profesores */
         <DocumentsByDepartment
           documents={displayDocs}
           departments={departments}
         />
       ) : (
-        /* Vista de tabla para admins, secretarios, directores — o en modo búsqueda */
         <>
           <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] overflow-hidden">
             <div className="grid grid-cols-[1fr_180px_80px_100px_52px] px-5 py-3 bg-[var(--color-surface-secondary)] border-b border-[var(--color-surface-border)]">
@@ -191,7 +231,6 @@ export function DocumentsPage() {
             </div>
           </div>
 
-          {/* Paginación — solo en vista tabla y sin búsqueda activa */}
           {!isSearchMode && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <p className="text-xs text-[var(--color-text-muted)]">
@@ -220,7 +259,6 @@ export function DocumentsPage() {
         </>
       )}
 
-      {/* Dialogs — solo accesibles para roles con permisos */}
       <CreateDocumentDialog
         open={createOpen || !!editDoc}
         onOpenChange={(o) => {
