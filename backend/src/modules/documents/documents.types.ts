@@ -1,3 +1,5 @@
+export type TargetAudience = "all" | "professors" | "students";
+
 export interface CreateDocumentInput {
   title: string;
   description?: string;
@@ -21,10 +23,12 @@ export interface DocumentPermission {
   departmentId?: number;
   documentId: number;
   permission: DocumentPermissionType;
+  targetAudience?: TargetAudience;
 }
 
 export interface ShareDocumentInput {
   documentId: number;
   departmentId: number;
   permission: DocumentPermissionType;
+  targetAudience: TargetAudience;
 }

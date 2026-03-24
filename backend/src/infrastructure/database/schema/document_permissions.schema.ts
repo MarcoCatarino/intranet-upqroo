@@ -22,6 +22,10 @@ export const documentPermissions = mysqlTable("document_permissions", {
 
   permission: varchar("permission", { length: 20 }).notNull(),
 
+  targetAudience: varchar("target_audience", { length: 20 })
+    .notNull()
+    .default("all"),
+
   grantedBy: varchar("granted_by", { length: 36 }).notNull(),
 
   createdAt: timestamp("created_at").defaultNow(),
