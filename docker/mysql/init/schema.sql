@@ -209,6 +209,8 @@ CREATE TABLE document_permissions (
         'share'
     ) DEFAULT 'view',
 
+    target_audience ENUM('all', 'professors', 'students') NOT NULL DEFAULT 'all',
+
     granted_by CHAR(36) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
