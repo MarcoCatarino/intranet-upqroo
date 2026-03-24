@@ -10,6 +10,7 @@ import type {
   UserRole,
   EnrollmentImportResult,
   Enrollment,
+  TargetAudience,
 } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
@@ -163,8 +164,10 @@ export const documentsApi = {
 
   share: (data: {
     documentId: number;
-    departmentId: number;
+    departmentId?: number;
+    userId?: string;
     permission: PermissionType;
+    targetAudience?: TargetAudience;
   }) =>
     request("/documents/share", { method: "POST", body: JSON.stringify(data) }),
 

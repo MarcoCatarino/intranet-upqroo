@@ -24,6 +24,14 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   student: 1,
 };
 
+export type TargetAudience = "all" | "professors" | "students";
+
+export const TARGET_AUDIENCE_LABELS: Record<TargetAudience, string> = {
+  all: "Todos",
+  professors: "Solo profesores",
+  students: "Solo alumnos",
+};
+
 export interface Enrollment {
   matricula: string;
   uploadedBy: string;
@@ -87,6 +95,7 @@ export interface DocumentPermission {
   userId: string | null;
   departmentId: number | null;
   permission: PermissionType;
+  targetAudience: TargetAudience;
   grantedBy: string;
   createdAt: string;
 }
