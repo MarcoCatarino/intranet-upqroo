@@ -216,29 +216,31 @@ export async function getDocument(documentId: number) {
 
 export async function shareDocument(data: {
   documentId: number;
-  departmentId: number;
+  departmentId?: number;
+  userId?: string;
   permission: string;
   grantedBy: string;
   targetAudience?: "all" | "professors" | "students";
 }) {
   await grantUserPermission({
     documentId: data.documentId,
-    userId: undefined,
+    userId: data.userId,
     departmentId: data.departmentId,
     permission: data.permission,
     grantedBy: data.grantedBy,
-    targetAudience: data.targetAudience ?? "all",
+    targetAudience: data.userId ? "all" : (data.targetAudience ?? "all"),
   });
 }
 
 export async function revokeDocumentPermission(data: {
   documentId: number;
-  departmentId: number;
+  departmentId?: number;
+  userId?: string;
   revokedBy: string;
 }) {
   await revokePermission({
     documentId: data.documentId,
-    userId: undefined,
+    userId: data.userId,
     departmentId: data.departmentId,
   });
 }

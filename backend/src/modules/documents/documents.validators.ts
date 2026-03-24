@@ -16,15 +16,27 @@ export const updateDocumentSchema = z.object({
   departmentId: z.number().int().positive().optional(),
 });
 
-export const shareDocumentSchema = z.object({
-  documentId: z.number().int().positive(),
-  departmentId: z.number().int().positive(),
-  permission: z.enum(["view", "download", "upload_version", "edit", "share"]),
-  targetAudience: z.enum(["all", "professors", "students"]).default("all"),
-});
+export const shareDocumentSchema = z
+  .object({
+    documentId: z.number().int().positive(),
+
+    departmentId: z.number().int().positive().optional(),
+    userId: z.string().min(1).optional(),
+
+    permission: z.enum(["view", "download", "upload_version", "edit", "share"]),
+
+    targetAudience: z.enum(["all", "professors", "students"]).default("all"),
+  })
+  .refine((data) => !!(data.departmentId || data.userId), {
+    message: "Se requiere departmentId o userId",
+  })
+  .refine((data) => !(data.departmentId && data.userId), {
+    message: "Solo puede especificarse departmentId o userId, no ambos",
+  });
 
 export const revokePermissionSchema = z.object({
-  departmentId: z.number().int().positive(),
+  departmentId: z.number().int().positive().optional(),
+  userId: z.string().min(1).optional(),
 });
 
 export const paginationSchema = z.object({

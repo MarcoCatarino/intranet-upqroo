@@ -163,12 +163,13 @@ export async function shareDocumentController(req: Request, res: Response) {
       .json({ message: "No tienes permiso para compartir documentos" });
   }
 
-  const { documentId, departmentId, permission, targetAudience } =
+  const { documentId, departmentId, userId, permission, targetAudience } =
     shareDocumentSchema.parse(req.body);
 
   await shareDocument({
     documentId,
     departmentId,
+    userId,
     permission,
     targetAudience,
     grantedBy: req.user!.id,
@@ -179,11 +180,12 @@ export async function shareDocumentController(req: Request, res: Response) {
 
 export async function revokePermissionController(req: Request, res: Response) {
   const documentId = Number(req.params.documentId);
-  const { departmentId } = revokePermissionSchema.parse(req.body);
+  const { departmentId, userId } = revokePermissionSchema.parse(req.body);
 
   await revokeDocumentPermission({
     documentId,
     departmentId,
+    userId,
     revokedBy: req.user!.id,
   });
 
