@@ -219,6 +219,7 @@ export async function shareDocument(data: {
   departmentId: number;
   permission: string;
   grantedBy: string;
+  targetAudience?: "all" | "professors" | "students";
 }) {
   await grantUserPermission({
     documentId: data.documentId,
@@ -226,6 +227,7 @@ export async function shareDocument(data: {
     departmentId: data.departmentId,
     permission: data.permission,
     grantedBy: data.grantedBy,
+    targetAudience: data.targetAudience ?? "all",
   });
 }
 

@@ -163,14 +163,14 @@ export async function shareDocumentController(req: Request, res: Response) {
       .json({ message: "No tienes permiso para compartir documentos" });
   }
 
-  const { documentId, departmentId, permission } = shareDocumentSchema.parse(
-    req.body,
-  );
+  const { documentId, departmentId, permission, targetAudience } =
+    shareDocumentSchema.parse(req.body);
 
   await shareDocument({
     documentId,
     departmentId,
     permission,
+    targetAudience,
     grantedBy: req.user!.id,
   });
 
