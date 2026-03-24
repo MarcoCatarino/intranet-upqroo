@@ -20,6 +20,7 @@ export const shareDocumentSchema = z.object({
   documentId: z.number().int().positive(),
   departmentId: z.number().int().positive(),
   permission: z.enum(["view", "download", "upload_version", "edit", "share"]),
+  targetAudience: z.enum(["all", "professors", "students"]).default("all"),
 });
 
 export const revokePermissionSchema = z.object({

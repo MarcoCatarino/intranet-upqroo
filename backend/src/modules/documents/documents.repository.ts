@@ -6,6 +6,23 @@ import { professorUploadPermissions } from "../../infrastructure/database/schema
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
 import { documentPermissions } from "../../infrastructure/database/schema/document_permissions.schema.js";
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
+import type { TargetAudience } from "./documents.types.js";
+
+function audienceCondition(userRole: string) {
+  if (userRole === "professor") {
+    return or(
+      eq(documentPermissions.targetAudience, "all"),
+      eq(documentPermissions.targetAudience, "professors"),
+    );
+  }
+  if (userRole === "student") {
+    return or(
+      eq(documentPermissions.targetAudience, "all"),
+      eq(documentPermissions.targetAudience, "students"),
+    );
+  }
+  return undefined;
+}
 
 export async function grantUserPermission(data: {
   documentId: number;
@@ -13,6 +30,7 @@ export async function grantUserPermission(data: {
   departmentId?: number;
   permission: string;
   grantedBy: string;
+  targetAudience?: TargetAudience;
 }) {
   await db.insert(documentPermissions).values({
     documentId: data.documentId,
@@ -20,6 +38,7 @@ export async function grantUserPermission(data: {
     departmentId: data.departmentId ?? null,
     permission: data.permission,
     grantedBy: data.grantedBy,
+    targetAudience: data.targetAudience ?? "all",
   });
 }
 
@@ -139,6 +158,10 @@ export async function listDocuments(
         and(
           isNull(documents.deletedAt),
           eq(documentPermissions.departmentId, studentDepartmentId),
+          or(
+            eq(documentPermissions.targetAudience, "all"),
+            eq(documentPermissions.targetAudience, "students"),
+          ),
         ),
       )
       .limit(limit)
@@ -165,6 +188,7 @@ export async function listDocuments(
           and(
             eq(departmentUsers.userId, userId),
             eq(documentPermissions.departmentId, departmentUsers.departmentId),
+            audienceCondition(userRole),
           ),
           userRole === "secretary"
             ? sql`documents.department_id IN (
@@ -244,6 +268,13 @@ export async function searchDocuments(
 ) {
   const safeLike = `%${query.replace(/[%_\\]/g, "\\$&")}%`;
 
+  const audienceSql =
+    userRole === "professor"
+      ? sql`AND dp.target_audience IN ('all', 'professors')`
+      : userRole === "student"
+        ? sql`AND dp.target_audience IN ('all', 'students')`
+        : sql``;
+
   const result = await db.execute(sql`
     SELECT DISTINCT
       d.id,
@@ -295,12 +326,15 @@ export async function searchDocuments(
         ${
           userRole === "student"
             ? studentDepartmentId != null
-              ? sql`dp.department_id = ${studentDepartmentId}`
+              ? sql`(dp.department_id = ${studentDepartmentId} AND dp.target_audience IN ('all', 'students'))`
               : sql`FALSE`
             : sql`(
                 d.owner_id = ${userId}
                 OR dp.user_id = ${userId}
-                OR du.user_id = ${userId}
+                OR (
+                  du.user_id = ${userId}
+                  ${audienceSql}
+                )
               )`
         }
       )
@@ -347,6 +381,10 @@ export async function countUserDocuments(
         and(
           isNull(documents.deletedAt),
           eq(documentPermissions.departmentId, studentDepartmentId),
+          or(
+            eq(documentPermissions.targetAudience, "all"),
+            eq(documentPermissions.targetAudience, "students"),
+          ),
         ),
       );
 
@@ -373,6 +411,7 @@ export async function countUserDocuments(
           and(
             eq(departmentUsers.userId, userId),
             eq(documentPermissions.departmentId, departmentUsers.departmentId),
+            audienceCondition(userRole),
           ),
           userRole === "secretary"
             ? sql`documents.department_id IN (
