@@ -198,6 +198,7 @@ export async function getPermissionsForDocument(documentId: number) {
     .map((p) => ({
       userId: p.userId,
       permission: p.permission,
+      targetAudience: p.targetAudience,
     }));
 
   const departments = permissions
@@ -205,6 +206,7 @@ export async function getPermissionsForDocument(documentId: number) {
     .map((p) => ({
       departmentId: p.departmentId,
       permission: p.permission,
+      targetAudience: p.targetAudience,
     }));
 
   return { users, departments };
