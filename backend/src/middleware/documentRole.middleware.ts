@@ -18,12 +18,10 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return res.status(400).json({ message: "Document id required" });
     }
 
-    // ── Admin: acceso total ──────────────────────────────────────────────────
     if (userRole === "admin") {
       return next();
     }
 
-    // ── Verificar que el documento existe y no está eliminado ────────────────
     const docResult = await db
       .select({
         id: documents.id,
@@ -40,15 +38,10 @@ export function documentRoleMiddleware(requiredPermission: string) {
 
     const doc = docResult[0];
 
-    // ── Owner: acceso total sobre su propio documento ────────────────────────
     if (doc.ownerId === userId) {
       return next();
     }
 
-    // ── Verificación de permiso de subida para profesores ────────────────────
-    // Un profesor solo puede subir si el director le habilitó el permiso
-    // explícitamente en professor_upload_permissions para el departamento
-    // al que pertenece el documento.
     if (requiredPermission === "upload_version" && userRole === "professor") {
       const uploadPerm = await db
         .select({ professorId: professorUploadPermissions.professorId })
@@ -68,7 +61,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
       });
     }
 
-    // ── Verificación de permiso directo por userId ───────────────────────────
     const userDirectPermission = await db
       .select({ id: documentPermissions.id })
       .from(documentPermissions)
@@ -85,7 +77,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return next();
     }
 
-    // ── Verificación de permiso por departamento ─────────────────────────────
     const userDeptResult = await db
       .select({ departmentId: departmentUsers.departmentId })
       .from(departmentUsers)
@@ -103,6 +94,17 @@ export function documentRoleMiddleware(requiredPermission: string) {
             eq(documentPermissions.documentId, documentId),
             eq(documentPermissions.departmentId, userDepartmentId),
             eq(documentPermissions.permission, requiredPermission),
+            userRole === "professor"
+              ? or(
+                  eq(documentPermissions.targetAudience, "all"),
+                  eq(documentPermissions.targetAudience, "professors"),
+                )
+              : userRole === "student"
+                ? or(
+                    eq(documentPermissions.targetAudience, "all"),
+                    eq(documentPermissions.targetAudience, "students"),
+                  )
+                : undefined,
           ),
         )
         .limit(1);
@@ -112,7 +114,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
       }
     }
 
-    // ── Verificación adicional para "share" en directores ────────────────────
     if (requiredPermission === "share" && userRole === "director") {
       if (!userDepartmentId) {
         return res.status(403).json({
@@ -140,7 +141,6 @@ export function documentRoleMiddleware(requiredPermission: string) {
       });
     }
 
-    // ── Sin ningún permiso válido ────────────────────────────────────────────
     return res.status(403).json({ message: "Permission denied" });
   };
 }
