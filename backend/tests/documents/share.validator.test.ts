@@ -3,10 +3,21 @@ import assert from "node:assert";
 
 import { shareDocumentSchema } from "../../src/modules/documents/documents.validators.js";
 
-test("requires departmentId", () => {
+test("requires departmentId or userId", () => {
   assert.throws(() => {
     shareDocumentSchema.parse({
       documentId: 1,
+      permission: "view",
+    });
+  });
+});
+
+test("rejects both departmentId and userId at once", () => {
+  assert.throws(() => {
+    shareDocumentSchema.parse({
+      documentId: 1,
+      departmentId: 2,
+      userId: "abc-123",
       permission: "view",
     });
   });

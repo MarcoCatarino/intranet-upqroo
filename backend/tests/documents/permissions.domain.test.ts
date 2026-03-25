@@ -14,10 +14,31 @@ test("accepts share with department", () => {
   assert.equal(result.departmentId, 2);
 });
 
-test("rejects share without departmentId", () => {
+test("accepts share with userId", () => {
+  const result = shareDocumentSchema.parse({
+    documentId: 1,
+    userId: "abc-123",
+    permission: "view",
+  });
+
+  assert.equal(result.userId, "abc-123");
+});
+
+test("rejects share without departmentId or userId", () => {
   assert.throws(() => {
     shareDocumentSchema.parse({
       documentId: 1,
+      permission: "view",
+    });
+  });
+});
+
+test("rejects share with both departmentId and userId", () => {
+  assert.throws(() => {
+    shareDocumentSchema.parse({
+      documentId: 1,
+      departmentId: 2,
+      userId: "abc-123",
       permission: "view",
     });
   });
