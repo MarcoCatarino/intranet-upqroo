@@ -11,7 +11,7 @@ Construido como una **aplicación web con arquitectura modular**, con procesamie
 ## Tabla de Contenidos
 
 - [Institutional Document Management System (IDMS)](#institutional-document-management-system-idms)
-    - [Universidad Politécnica de Quintana Roo](#universidad-politécnica-de-quintana-roo)
+  - [Universidad Politécnica de Quintana Roo](#universidad-politécnica-de-quintana-roo)
   - [Tabla de Contenidos](#tabla-de-contenidos)
   - [1. Objetivo del Sistema](#1-objetivo-del-sistema)
   - [2. Tipo de Sistema](#2-tipo-de-sistema)
@@ -248,17 +248,27 @@ Ejemplo:
 
 ## 7. Distribución y Permisos
 
-Los documentos se comparten **por departamento**. No existe compartición individual por usuario en la interfaz principal.
+Los documentos pueden compartirse con un **departamento completo** o con un **usuario individual** directamente.
 
 **Permisos disponibles:**
 
-| Permiso          | Descripción                       |
-| ---------------- | --------------------------------- |
-| `view`           | Ver metadatos del documento       |
-| `download`       | Descargar el archivo              |
-| `upload_version` | Subir nuevas versiones            |
-| `edit`           | Editar metadatos                  |
-| `share`          | Compartir con otros departamentos |
+| Permiso          | Descripción                 |
+| ---------------- | --------------------------- |
+| `view`           | Ver metadatos del documento |
+| `download`       | Descargar el archivo        |
+| `upload_version` | Subir nuevas versiones      |
+| `edit`           | Editar metadatos            |
+| `share`          | Compartir con otros         |
+
+**Control de audiencia al compartir por departamento:**
+
+Cuando se comparte con un departamento, el remitente puede elegir quién dentro de ese departamento puede ver el documento:
+
+| Audiencia    | Quién lo ve                               |
+| ------------ | ----------------------------------------- |
+| `all`        | Profesores y alumnos del departamento     |
+| `professors` | Solo profesores asignados al departamento |
+| `students`   | Solo alumnos del padrón del departamento  |
 
 **Control de compartición para directores:**
 
@@ -267,9 +277,10 @@ Los directores solo pueden compartir si el administrador o una secretaría les h
 **Ejemplo de flujo institucional:**
 
 ```
-Secretaría Académica → Departamentos de carrera
-Director de Programa → Alumnos de la carrera (vía padrón)
-Director de Programa → Profesores habilitados
+Secretaría Académica → Director de carrera específico (individual)
+Secretaría Académica → Departamento completo (todos o solo directores)
+Director de Programa → Alumnos de la carrera (vía padrón, audiencia 'students')
+Director de Programa → Profesores habilitados (audiencia 'professors')
 ```
 
 ---
@@ -424,7 +435,7 @@ Para la documentación detallada de cada parte, consulta los READMEs específico
 | `director_share_permissions`   | Permisos de compartición habilitados a directores             |
 | `documents`                    | Documentos con soft delete                                    |
 | `document_versions`            | Versiones con ruta, tamaño y hash SHA-256                     |
-| `document_permissions`         | Permisos granulares por usuario o departamento                |
+| `document_permissions`         | Permisos granulares por usuario o departamento.               |
 | `document_audit_logs`          | Auditoría de acciones con metadata JSON                       |
 | `student_enrollments`          | Padrón de alumnos por carrera (matrícula + departamento)      |
 
@@ -480,6 +491,8 @@ POST /documents/upload   → Multer guarda en /tmp
 ```
 POST /documents/share    → Verifica permiso 'share' del solicitante
                          → Verifica director_share_permissions si aplica
+                         → Acepta departmentId (con target_audience) o userId
+                         → Para permisos por userId: target_audience se fuerza a 'all'
                          → Crea registro en document_permissions
 ```
 

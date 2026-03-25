@@ -107,18 +107,18 @@ El archivo `mysql/init/schema.sql` se ejecuta **automáticamente** la primera ve
 
 ### Tablas creadas
 
-| Tabla                          | Descripción                                                                                                                         |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `users`                        | Usuarios persistentes (admin, secretary, director, assistant). Los roles `professor` y `student` son efímeros y no se guardan aquí. |
-| `departments`                  | Secretarías y departamentos con jerarquía `parent_id` y soft delete                                                                 |
-| `department_users`             | Relación usuario-departamento con rol                                                                                               |
-| `professor_upload_permissions` | Habilita a un profesor a subir archivos en un departamento específico                                                               |
-| `director_share_permissions`   | Habilita a un director a compartir documentos de su departamento                                                                    |
-| `documents`                    | Documentos con soft delete (`deleted_at`)                                                                                           |
-| `document_versions`            | Versiones de archivos con ruta, tamaño, MIME type y hash SHA-256                                                                    |
-| `document_permissions`         | Permisos granulares (`view`, `download`, `upload_version`, `edit`, `share`) por usuario o departamento                              |
-| `document_audit_logs`          | Registro de acciones: creación, subida, edición y eliminación de documentos                                                         |
-| `student_enrollments`          | Padrón de alumnos por carrera (matrícula + departamento)                                                                            |
+| Tabla                          | Descripción                                                                                                                                                                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users`                        | Usuarios persistentes (admin, secretary, director, assistant). Los roles `professor` y `student` son efímeros y no se guardan aquí.                                                                                           |
+| `departments`                  | Secretarías y departamentos con jerarquía `parent_id` y soft delete                                                                                                                                                           |
+| `department_users`             | Relación usuario-departamento con rol                                                                                                                                                                                         |
+| `professor_upload_permissions` | Habilita a un profesor a subir archivos en un departamento específico                                                                                                                                                         |
+| `director_share_permissions`   | Habilita a un director a compartir documentos de su departamento                                                                                                                                                              |
+| `documents`                    | Documentos con soft delete (`deleted_at`)                                                                                                                                                                                     |
+| `document_versions`            | Versiones de archivos con ruta, tamaño, MIME type y hash SHA-256                                                                                                                                                              |
+| `document_permissions`         | Permisos granulares (`view`, `download`, `upload_version`, `edit`, `share`) por usuario o departamento. Columna `target_audience ENUM('all','professors','students')` controla qué miembros del departamento ven el documento |
+| `document_audit_logs`          | Registro de acciones: creación, subida, edición y eliminación de documentos                                                                                                                                                   |
+| `student_enrollments`          | Padrón de alumnos por carrera (matrícula + departamento)                                                                                                                                                                      |
 
 ### Índices de rendimiento destacados
 

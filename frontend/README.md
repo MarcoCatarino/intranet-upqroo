@@ -85,7 +85,7 @@ frontend/src/
 │   ├── dialogs/                # Modales de operaciones principales
 │   │   ├── CreateDocumentDialog.tsx  # Crear y editar documentos
 │   │   ├── UploadFileDialog.tsx      # Subir archivo (drag & drop, PDF/Word/Excel/PPT)
-│   │   ├── ShareDocumentDialog.tsx   # Compartir con departamentos
+│   │   ├── ShareDocumentDialog.tsx   # Compartir con departamentos (+ selector de audiencia) o usuario individual (dos tabs)
 │   │   ├── AddUserDialog.tsx         # Agregar usuario a departamento
 │   │   └── CreateUserDialog.tsx      # Crear nuevo usuario institucional
 │   │
@@ -308,11 +308,12 @@ Todos los tipos del dominio están en `src/types/index.ts`:
 | Tipo                     | Descripción                                                                             |
 | ------------------------ | --------------------------------------------------------------------------------------- |
 | `UserRole`               | `"admin" \| "secretary" \| "director" \| "assistant" \| "professor" \| "student"`       |
+| `TargetAudience`         | `"all" \| "professors" \| "students"` — controla quién del departamento ve el documento |
 | `User`                   | Usuario con `id`, `email`, `name`, `role`, `avatarUrl`, `departmentId?`                 |
 | `Department`             | Con `id`, `name`, `slug`, `parentId`                                                    |
 | `Document`               | Con `id`, `title`, `departmentId`, `currentVersion`, `mimeType`, `deletedAt`            |
 | `DocumentVersion`        | Con `version`, `filePath`, `fileSize`, `fileHash`, `mimeType`                           |
-| `DocumentPermission`     | Con `permission`, `userId?`, `departmentId?`                                            |
+| `DocumentPermission`     | Con `permission`, `userId?`, `departmentId?`, `targetAudience`                          |
 | `AuditLog`               | Con `action`, `userId`, `metadata`, `createdAt`                                         |
 | `PermissionType`         | `"view" \| "download" \| "upload_version" \| "edit" \| "share"`                         |
 | `AuditAction`            | `"document_created" \| "document_uploaded" \| "document_updated" \| "document_deleted"` |

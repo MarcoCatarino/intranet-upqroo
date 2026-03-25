@@ -125,9 +125,9 @@ Gestiona el login con Google OAuth y el logout.
 - `DELETE /documents/:id` — Soft delete (admin, secretary, director)
 - `GET /documents/:id/versions` — Listado de versiones
 - `GET /documents/:id/version/:n` — Descargar versión específica
-- `POST /documents/share` — Compartir con un departamento
-- `GET /documents/:id/permissions` — Ver permisos activos
-- `DELETE /documents/:id/permissions` — Revocar permiso
+- `POST /documents/share` — Compartir con un departamento (con `target_audience`) o con un usuario individual
+- `GET /documents/:id/permissions` — Ver permisos activos (incluye `targetAudience` por entrada)
+- `DELETE /documents/:id/permissions` — Revocar permiso por `departmentId` o `userId`
 - `GET /documents/:id/audit` — Logs de auditoría
 - `POST /documents/retry-failed` — Reintentar jobs fallidos (solo admin)
 
@@ -247,22 +247,22 @@ Ejecuta cada hora. Elimina archivos `tmp-*` con más de **24 horas** de antigüe
 
 ### Documents
 
-| Método   | Ruta                         | Acceso                             | Descripción                             |
-| -------- | ---------------------------- | ---------------------------------- | --------------------------------------- |
-| `GET`    | `/documents`                 | Autenticado                        | Listar documentos accesibles (paginado) |
-| `GET`    | `/documents/search`          | Autenticado                        | Búsqueda por título/descripción         |
-| `POST`   | `/documents`                 | Admin/Secretary/Director/Assistant | Crear documento                         |
-| `POST`   | `/documents/upload`          | Según permisos                     | Subir archivo a un documento            |
-| `GET`    | `/documents/:id`             | Según permisos `view`              | Detalle                                 |
-| `PATCH`  | `/documents/:id`             | Según permisos `edit`              | Editar metadatos                        |
-| `DELETE` | `/documents/:id`             | Admin/Secretary/Director           | Soft delete                             |
-| `GET`    | `/documents/:id/versions`    | Según permisos `view`              | Historial de versiones                  |
-| `GET`    | `/documents/:id/version/:n`  | Según permisos `download`          | Descargar versión                       |
-| `POST`   | `/documents/share`           | Según permisos `share`             | Compartir con departamento              |
-| `GET`    | `/documents/:id/permissions` | Según permisos `share`             | Ver permisos                            |
-| `DELETE` | `/documents/:id/permissions` | Según permisos `share`             | Revocar permiso                         |
-| `GET`    | `/documents/:id/audit`       | Según permisos `view`              | Logs de auditoría                       |
-| `POST`   | `/documents/retry-failed`    | Admin                              | Reintentar jobs fallidos                |
+| Método   | Ruta                         | Acceso                             | Descripción                                   |
+| -------- | ---------------------------- | ---------------------------------- | ----------------------------------------------|
+| `GET`    | `/documents`                 | Autenticado                        | Listar documentos accesibles (paginado)       |
+| `GET`    | `/documents/search`          | Autenticado                        | Búsqueda por título/descripción               |
+| `POST`   | `/documents`                 | Admin/Secretary/Director/Assistant | Crear documento                               |
+| `POST`   | `/documents/upload`          | Según permisos                     | Subir archivo a un documento                  |
+| `GET`    | `/documents/:id`             | Según permisos `view`              | Detalle                                       |
+| `PATCH`  | `/documents/:id`             | Según permisos `edit`              | Editar metadatos                              |
+| `DELETE` | `/documents/:id`             | Admin/Secretary/Director           | Soft delete                                   |
+| `GET`    | `/documents/:id/versions`    | Según permisos `view`              | Historial de versiones                        |
+| `GET`    | `/documents/:id/version/:n`  | Según permisos `download`          | Descargar versión                             |
+| `POST`   | `/documents/share`           | Según permisos `share`             | Compartir con departamento o usuario          |
+| `GET`    | `/documents/:id/permissions` | Según permisos `share`             | Ver permisos (incluye `targetAudience`)       |
+| `DELETE` | `/documents/:id/permissions` | Según permisos `share`             | Revocar permiso por `departmentId` o `userId` |
+| `GET`    | `/documents/:id/audit`       | Según permisos `view`              | Logs de auditoría                             |
+| `POST`   | `/documents/retry-failed`    | Admin                              | Reintentar jobs fallidos                      |
 
 ### Students
 
