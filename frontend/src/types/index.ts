@@ -4,6 +4,7 @@ export type UserRole =
   | "director"
   | "assistant"
   | "professor"
+  | "employee"
   | "student";
 
 export const ROLE_LABELS: Record<UserRole, string> = {
@@ -12,15 +13,17 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   director: "Director",
   assistant: "Asistente",
   professor: "Profesor",
+  employee: "Empleado",
   student: "Alumno",
 };
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  admin: 5,
-  secretary: 4,
-  director: 3,
-  assistant: 2,
+  admin: 6,
+  secretary: 5,
+  director: 4,
+  assistant: 3,
   professor: 2,
+  employee: 2,
   student: 1,
 };
 
@@ -44,6 +47,12 @@ export interface EnrollmentImportResult {
   skipped: number;
   invalid?: string[];
   departmentId: number;
+}
+
+export interface EmployeeUploadPermission {
+  employeeId: string;
+  grantedBy: string;
+  createdAt: string;
 }
 
 export interface User {
