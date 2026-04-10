@@ -26,7 +26,17 @@ export const professorUploadSchema = z.object({
   professorId: z.string().min(1).max(100),
 });
 
+export const employeeUploadSchema = z.object({
+  departmentId: z.coerce.number(),
+  employeeId: z.string().min(1).max(100),
+});
+
 export const directorShareSchema = z.object({
+  departmentId: z.coerce.number(),
+  directorId: z.string().uuid(),
+});
+
+export const directorEmployeeSchema = z.object({
   departmentId: z.coerce.number(),
   directorId: z.string().uuid(),
 });

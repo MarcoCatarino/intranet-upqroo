@@ -7,11 +7,17 @@ import {
   listUsersInDepartment,
   insertProfessorUploadPermission,
   deleteProfessorUploadPermission,
+  insertEmployeeUploadPermission,
+  deleteEmployeeUploadPermission,
+  listEmployeeUploadPermissions,
   updateDepartment,
   softDeleteDepartment,
   insertDirectorSharePermission,
   deleteDirectorSharePermission,
   getDirectorSharePermission,
+  insertDirectorEmployeePermission,
+  deleteDirectorEmployeePermission,
+  getDirectorEmployeePermission,
 } from "./departments.repository.js";
 
 export async function createDepartmentService(data: {
@@ -30,28 +36,18 @@ export async function getDepartment(departmentId: number) {
   return findDepartmentById(departmentId);
 }
 
-// Nuevo: editar
 export async function updateDepartmentService(
   departmentId: number,
   data: { name?: string; slug?: string },
 ) {
   const existing = await findDepartmentById(departmentId);
-
-  if (!existing) {
-    throw new Error("Departamento no encontrado");
-  }
-
+  if (!existing) throw new Error("Departamento no encontrado");
   return updateDepartment(departmentId, data);
 }
 
-// Nuevo: eliminar (soft)
 export async function deleteDepartmentService(departmentId: number) {
   const existing = await findDepartmentById(departmentId);
-
-  if (!existing) {
-    throw new Error("Departamento no encontrado");
-  }
-
+  if (!existing) throw new Error("Departamento no encontrado");
   return softDeleteDepartment(departmentId);
 }
 
@@ -71,6 +67,10 @@ export async function usersInDepartment(departmentId: number) {
   return listUsersInDepartment(departmentId);
 }
 
+/* =========================
+   PROFESSOR UPLOAD
+========================= */
+
 export async function grantProfessorUploadService(data: {
   professorId: string;
   departmentId: number;
@@ -85,6 +85,35 @@ export async function revokeProfessorUploadService(data: {
 }) {
   return deleteProfessorUploadPermission(data);
 }
+
+/* =========================
+   EMPLOYEE UPLOAD
+========================= */
+
+export async function grantEmployeeUploadService(data: {
+  employeeId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return insertEmployeeUploadPermission(data);
+}
+
+export async function revokeEmployeeUploadService(data: {
+  employeeId: string;
+  departmentId: number;
+}) {
+  return deleteEmployeeUploadPermission(data);
+}
+
+export async function getEmployeeUploadPermissionsService(
+  departmentId: number,
+) {
+  return listEmployeeUploadPermissions(departmentId);
+}
+
+/* =========================
+   DIRECTOR SHARE
+========================= */
 
 export async function grantDirectorShareService(data: {
   directorId: string;
@@ -106,4 +135,30 @@ export async function checkDirectorShareService(
   departmentId: number,
 ) {
   return getDirectorSharePermission(directorId, departmentId);
+}
+
+/* =========================
+   DIRECTOR EMPLOYEE CREATION
+========================= */
+
+export async function grantDirectorEmployeeService(data: {
+  directorId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return insertDirectorEmployeePermission(data);
+}
+
+export async function revokeDirectorEmployeeService(data: {
+  directorId: string;
+  departmentId: number;
+}) {
+  return deleteDirectorEmployeePermission(data);
+}
+
+export async function checkDirectorEmployeeService(
+  directorId: string,
+  departmentId: number,
+) {
+  return getDirectorEmployeePermission(directorId, departmentId);
 }

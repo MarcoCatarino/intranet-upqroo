@@ -5,7 +5,9 @@ import { departments } from "../../infrastructure/database/schema/departments.sc
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
 import { users } from "../../infrastructure/database/schema/users.schema.js";
 import { professorUploadPermissions } from "../../infrastructure/database/schema/professor_upload_permissions.schema.js";
+import { employeeUploadPermissions } from "../../infrastructure/database/schema/employee_upload_permissions.schema.js";
 import { directorSharePermissions } from "../../infrastructure/database/schema/director_share_permissions.schema.js";
+import { directorEmployeePermissions } from "../../infrastructure/database/schema/director_employee_permissions.schema.js";
 
 export async function createDepartment(data: {
   name: string;
@@ -78,11 +80,16 @@ export async function listUsersInDepartment(departmentId: number) {
       id: users.id,
       name: users.name,
       email: users.email,
+      role: users.role,
     })
     .from(departmentUsers)
     .innerJoin(users, eq(users.id, departmentUsers.userId))
     .where(eq(departmentUsers.departmentId, departmentId));
 }
+
+/* =========================
+   PROFESSOR UPLOAD PERMISSIONS
+========================= */
 
 export async function insertProfessorUploadPermission(data: {
   professorId: string;
@@ -105,6 +112,47 @@ export async function deleteProfessorUploadPermission(data: {
       ),
     );
 }
+
+/* =========================
+   EMPLOYEE UPLOAD PERMISSIONS
+========================= */
+
+export async function insertEmployeeUploadPermission(data: {
+  employeeId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return db.insert(employeeUploadPermissions).values(data);
+}
+
+export async function deleteEmployeeUploadPermission(data: {
+  employeeId: string;
+  departmentId: number;
+}) {
+  return db
+    .delete(employeeUploadPermissions)
+    .where(
+      and(
+        eq(employeeUploadPermissions.employeeId, data.employeeId),
+        eq(employeeUploadPermissions.departmentId, data.departmentId),
+      ),
+    );
+}
+
+export async function listEmployeeUploadPermissions(departmentId: number) {
+  return db
+    .select({
+      employeeId: employeeUploadPermissions.employeeId,
+      grantedBy: employeeUploadPermissions.grantedBy,
+      createdAt: employeeUploadPermissions.createdAt,
+    })
+    .from(employeeUploadPermissions)
+    .where(eq(employeeUploadPermissions.departmentId, departmentId));
+}
+
+/* =========================
+   DIRECTOR SHARE PERMISSIONS
+========================= */
 
 export async function insertDirectorSharePermission(data: {
   directorId: string;
@@ -139,6 +187,50 @@ export async function getDirectorSharePermission(
       and(
         eq(directorSharePermissions.directorId, directorId),
         eq(directorSharePermissions.departmentId, departmentId),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
+}
+
+/* =========================
+   DIRECTOR EMPLOYEE PERMISSIONS
+========================= */
+
+export async function insertDirectorEmployeePermission(data: {
+  directorId: string;
+  departmentId: number;
+  grantedBy: string;
+}) {
+  return db.insert(directorEmployeePermissions).values(data);
+}
+
+export async function deleteDirectorEmployeePermission(data: {
+  directorId: string;
+  departmentId: number;
+}) {
+  return db
+    .delete(directorEmployeePermissions)
+    .where(
+      and(
+        eq(directorEmployeePermissions.directorId, data.directorId),
+        eq(directorEmployeePermissions.departmentId, data.departmentId),
+      ),
+    );
+}
+
+export async function getDirectorEmployeePermission(
+  directorId: string,
+  departmentId: number,
+) {
+  const result = await db
+    .select()
+    .from(directorEmployeePermissions)
+    .where(
+      and(
+        eq(directorEmployeePermissions.directorId, directorId),
+        eq(directorEmployeePermissions.departmentId, departmentId),
       ),
     )
     .limit(1);

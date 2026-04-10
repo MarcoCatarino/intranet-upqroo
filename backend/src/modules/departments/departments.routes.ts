@@ -14,8 +14,13 @@ import {
   departmentUsersController,
   grantProfessorUploadController,
   revokeProfessorUploadController,
+  grantEmployeeUploadController,
+  revokeEmployeeUploadController,
+  listEmployeeUploadController,
   grantDirectorShareController,
   revokeDirectorShareController,
+  grantDirectorEmployeeController,
+  revokeDirectorEmployeeController,
 } from "./departments.controller.js";
 
 const router = Router();
@@ -95,6 +100,32 @@ router.delete(
 
 /*
 |--------------------------------------------------------------------------
+| Permisos de subida para empleados — admin o director
+|--------------------------------------------------------------------------
+*/
+router.get(
+  "/:departmentId/employee-upload",
+  authMiddleware,
+  roleMiddleware("admin", "director"),
+  listEmployeeUploadController,
+);
+
+router.post(
+  "/:departmentId/employee-upload/:employeeId",
+  authMiddleware,
+  roleMiddleware("admin", "director"),
+  grantEmployeeUploadController,
+);
+
+router.delete(
+  "/:departmentId/employee-upload/:employeeId",
+  authMiddleware,
+  roleMiddleware("admin", "director"),
+  revokeEmployeeUploadController,
+);
+
+/*
+|--------------------------------------------------------------------------
 | Permisos de compartir para directores — admin o secretary
 |--------------------------------------------------------------------------
 */
@@ -110,6 +141,25 @@ router.delete(
   authMiddleware,
   roleMiddleware("admin", "secretary"),
   revokeDirectorShareController,
+);
+
+/*
+|--------------------------------------------------------------------------
+| Permiso de creación de empleados para directores — admin o secretary
+|--------------------------------------------------------------------------
+*/
+router.post(
+  "/:departmentId/director-employee/:directorId",
+  authMiddleware,
+  roleMiddleware("admin", "secretary"),
+  grantDirectorEmployeeController,
+);
+
+router.delete(
+  "/:departmentId/director-employee/:directorId",
+  authMiddleware,
+  roleMiddleware("admin", "secretary"),
+  revokeDirectorEmployeeController,
 );
 
 export default router;
