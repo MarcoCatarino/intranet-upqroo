@@ -11,6 +11,7 @@ import type {
   EnrollmentImportResult,
   Enrollment,
   TargetAudience,
+  EmployeeUploadPermission,
 } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
@@ -99,7 +100,56 @@ export const departmentsApi = {
     }),
 
   users: (departmentId: number) =>
-    request<User[]>(`/departments/${departmentId}/users`),
+    request<(User & { role: string })[]>(`/departments/${departmentId}/users`),
+
+  // ── Professor upload permissions ─────────────────────────────────────────
+  grantProfessorUpload: (departmentId: number, professorId: string) =>
+    request(`/departments/${departmentId}/professor-upload/${professorId}`, {
+      method: "POST",
+    }),
+
+  revokeProfessorUpload: (departmentId: number, professorId: string) =>
+    request(`/departments/${departmentId}/professor-upload/${professorId}`, {
+      method: "DELETE",
+    }),
+
+  // ── Employee upload permissions ──────────────────────────────────────────
+  getEmployeeUploadPermissions: (departmentId: number) =>
+    request<EmployeeUploadPermission[]>(
+      `/departments/${departmentId}/employee-upload`,
+    ),
+
+  grantEmployeeUpload: (departmentId: number, employeeId: string) =>
+    request(`/departments/${departmentId}/employee-upload/${employeeId}`, {
+      method: "POST",
+    }),
+
+  revokeEmployeeUpload: (departmentId: number, employeeId: string) =>
+    request(`/departments/${departmentId}/employee-upload/${employeeId}`, {
+      method: "DELETE",
+    }),
+
+  // ── Director share permissions ───────────────────────────────────────────
+  grantDirectorShare: (departmentId: number, directorId: string) =>
+    request(`/departments/${departmentId}/director-share/${directorId}`, {
+      method: "POST",
+    }),
+
+  revokeDirectorShare: (departmentId: number, directorId: string) =>
+    request(`/departments/${departmentId}/director-share/${directorId}`, {
+      method: "DELETE",
+    }),
+
+  // ── Director employee-creation permissions ───────────────────────────────
+  grantDirectorEmployee: (departmentId: number, directorId: string) =>
+    request(`/departments/${departmentId}/director-employee/${directorId}`, {
+      method: "POST",
+    }),
+
+  revokeDirectorEmployee: (departmentId: number, directorId: string) =>
+    request(`/departments/${departmentId}/director-employee/${directorId}`, {
+      method: "DELETE",
+    }),
 };
 
 export const documentsApi = {
