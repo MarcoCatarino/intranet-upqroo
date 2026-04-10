@@ -310,6 +310,62 @@ CREATE TABLE director_share_permissions (
 );
 
 -- ===============================
+-- EMPLOYEE UPLOAD PERMISSIONS
+-- ===============================
+
+CREATE TABLE employee_upload_permissions (
+    employee_id   CHAR(36)     NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
+    granted_by    CHAR(36)     NOT NULL,
+    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (employee_id, department_id),
+
+    CONSTRAINT fk_eup_employee
+        FOREIGN KEY (employee_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_eup_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_eup_granted_by
+        FOREIGN KEY (granted_by)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
+-- DIRECTOR EMPLOYEE PERMISSIONS
+-- ===============================
+
+CREATE TABLE director_employee_permissions (
+    director_id   CHAR(36)     NOT NULL,
+    department_id INT UNSIGNED NOT NULL,
+    granted_by    CHAR(36)     NOT NULL,
+    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (director_id, department_id),
+
+    CONSTRAINT fk_dep_director
+        FOREIGN KEY (director_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dep_department
+        FOREIGN KEY (department_id)
+        REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dep_granted_by
+        FOREIGN KEY (granted_by)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- ===============================
 -- STUDENT ENROLLMENTS (Padrón)
 -- ===============================
 
