@@ -18,11 +18,13 @@ import {
   canDeleteDocument,
   canUploadDocument,
   canProfessorUpload,
+  canEmployeeUpload,
 } from "./documents.domain.js";
 
 import {
   createNewDocument,
   verifyProfessorCanUpload,
+  verifyEmployeeCanUpload,
   queueDocumentUpload,
   shareDocument,
   getUserDocuments,
@@ -73,7 +75,17 @@ export async function uploadDocumentController(req: Request, res: Response) {
         .status(403)
         .json({ message: "No tienes permiso para subir archivos" });
     }
-  } else if (!canProfessorUpload(userRole, true)) {
+  } else if (userRole === "employee") {
+    const hasPermission = await verifyEmployeeCanUpload(
+      req.user!.id,
+      documentId,
+    );
+    if (!canEmployeeUpload(userRole, hasPermission)) {
+      return res
+        .status(403)
+        .json({ message: "No tienes permiso para subir archivos" });
+    }
+  } else if (!canUploadDocument(userRole)) {
     return res
       .status(403)
       .json({ message: "No tienes permiso para subir archivos" });

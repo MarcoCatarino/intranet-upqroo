@@ -1,6 +1,6 @@
 import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
 
-// Roles que pueden subir documentos al sistema
+// Roles que pueden subir documentos al sistema (sin permiso especial)
 const UPLOAD_ROLES: UserRole[] = [
   "admin",
   "secretary",
@@ -8,10 +8,10 @@ const UPLOAD_ROLES: UserRole[] = [
   "assistant",
 ];
 
-// Roles que pueden editar metadatos de documentos (título, descripción, departamento)
+// Roles que pueden editar metadatos de documentos
 const EDIT_ROLES: UserRole[] = ["admin", "secretary", "director", "assistant"];
 
-// Roles que pueden compartir documentos con departamentos
+// Roles que pueden compartir documentos
 const SHARE_ROLES: UserRole[] = ["admin", "secretary", "director", "assistant"];
 
 // Roles que pueden eliminar documentos
@@ -24,6 +24,7 @@ const VIEW_ROLES: UserRole[] = [
   "director",
   "assistant",
   "professor",
+  "employee",
   "student",
 ];
 
@@ -47,12 +48,24 @@ export function canViewDocument(role: UserRole): boolean {
   return VIEW_ROLES.includes(role);
 }
 
-// Profesores con permiso habilitado por su director pueden subir documentos.
-// Esta función valida la lógica de negocio antes de consultar la DB.
+/**
+ * Profesores con permiso habilitado por su director pueden subir documentos.
+ */
 export function canProfessorUpload(
   role: UserRole,
   hasUploadPermission: boolean,
 ): boolean {
   if (role === "professor") return hasUploadPermission;
+  return canUploadDocument(role);
+}
+
+/**
+ * Empleados con permiso habilitado por su director pueden subir documentos.
+ */
+export function canEmployeeUpload(
+  role: UserRole,
+  hasUploadPermission: boolean,
+): boolean {
+  if (role === "employee") return hasUploadPermission;
   return canUploadDocument(role);
 }

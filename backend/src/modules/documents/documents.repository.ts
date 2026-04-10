@@ -3,11 +3,22 @@ import { or, eq, and, isNull, sql } from "drizzle-orm";
 
 import { documents } from "../../infrastructure/database/schema/documents.schema.js";
 import { professorUploadPermissions } from "../../infrastructure/database/schema/professor_upload_permissions.schema.js";
+import { employeeUploadPermissions } from "../../infrastructure/database/schema/employee_upload_permissions.schema.js";
 import { documentVersions } from "../../infrastructure/database/schema/document_versions.schema.js";
 import { documentPermissions } from "../../infrastructure/database/schema/document_permissions.schema.js";
 import { departmentUsers } from "../../infrastructure/database/schema/departments_users.schema.js";
 import type { TargetAudience } from "./documents.types.js";
 
+/**
+ * Returns a Drizzle condition restricting which target_audience values
+ * a given role is allowed to see.
+ *
+ * - professor  → all | professors
+ * - student    → all | students
+ * - employee   → all  (not professor-specific, not student-specific)
+ * - assistant  → all  (same rationale as employee)
+ * - other      → undefined (no restriction applied — admin, secretary, director)
+ */
 function audienceCondition(userRole: string) {
   if (userRole === "professor") {
     return or(
@@ -20,6 +31,9 @@ function audienceCondition(userRole: string) {
       eq(documentPermissions.targetAudience, "all"),
       eq(documentPermissions.targetAudience, "students"),
     );
+  }
+  if (userRole === "employee" || userRole === "assistant") {
+    return eq(documentPermissions.targetAudience, "all");
   }
   return undefined;
 }
@@ -273,7 +287,9 @@ export async function searchDocuments(
       ? sql`AND dp.target_audience IN ('all', 'professors')`
       : userRole === "student"
         ? sql`AND dp.target_audience IN ('all', 'students')`
-        : sql``;
+        : userRole === "employee" || userRole === "assistant"
+          ? sql`AND dp.target_audience = 'all'`
+          : sql``;
 
   const result = await db.execute(sql`
     SELECT DISTINCT
@@ -444,6 +460,24 @@ export async function hasProfessorUploadPermission(
       and(
         eq(professorUploadPermissions.professorId, professorId),
         eq(professorUploadPermissions.departmentId, departmentId),
+      ),
+    )
+    .limit(1);
+
+  return result.length > 0;
+}
+
+export async function hasEmployeeUploadPermission(
+  employeeId: string,
+  departmentId: number,
+): Promise<boolean> {
+  const result = await db
+    .select({ employeeId: employeeUploadPermissions.employeeId })
+    .from(employeeUploadPermissions)
+    .where(
+      and(
+        eq(employeeUploadPermissions.employeeId, employeeId),
+        eq(employeeUploadPermissions.departmentId, departmentId),
       ),
     )
     .limit(1);

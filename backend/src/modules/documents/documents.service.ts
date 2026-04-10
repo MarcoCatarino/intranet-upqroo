@@ -17,6 +17,7 @@ import {
   searchDocuments,
   updateDocumentMetadata,
   hasProfessorUploadPermission,
+  hasEmployeeUploadPermission,
   getDocumentVersionPaths,
   softDeleteDocument,
 } from "./documents.repository.js";
@@ -69,6 +70,15 @@ export async function verifyProfessorCanUpload(
   const doc = await getDocumentById(documentId);
   if (!doc) return false;
   return hasProfessorUploadPermission(professorId, doc.departmentId);
+}
+
+export async function verifyEmployeeCanUpload(
+  employeeId: string,
+  documentId: number,
+): Promise<boolean> {
+  const doc = await getDocumentById(documentId);
+  if (!doc) return false;
+  return hasEmployeeUploadPermission(employeeId, doc.departmentId);
 }
 
 export async function queueDocumentUpload(data: {
