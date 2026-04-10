@@ -8,7 +8,9 @@ import { departments } from "./schema/departments.schema.js";
 import { documents } from "./schema/documents.schema.js";
 import { documentAuditLogs } from "./schema/document_audit_logs.schema.js";
 import { professorUploadPermissions } from "./schema/professor_upload_permissions.schema.js";
+import { employeeUploadPermissions } from "./schema/employee_upload_permissions.schema.js";
 import { directorSharePermissions } from "./schema/director_share_permissions.schema.js";
+import { directorEmployeePermissions } from "./schema/director_employee_permissions.schema.js";
 import { studentEnrollments } from "./schema/student_enrollments.schema.js";
 
 /* =========================
@@ -20,7 +22,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   uploadedDocuments: many(documentVersions),
   grantedPermissions: many(documentPermissions),
   uploadPermissions: many(professorUploadPermissions),
+  employeeUploadPermissions: many(employeeUploadPermissions),
   sharePermissions: many(directorSharePermissions),
+  employeeCreationPermissions: many(directorEmployeePermissions),
   uploadedEnrollments: many(studentEnrollments),
 }));
 
@@ -81,6 +85,28 @@ export const professorUploadPermissionsRelations = relations(
 );
 
 /* =========================
+   EMPLOYEE UPLOAD PERMISSIONS
+========================= */
+
+export const employeeUploadPermissionsRelations = relations(
+  employeeUploadPermissions,
+  ({ one }) => ({
+    employee: one(users, {
+      fields: [employeeUploadPermissions.employeeId],
+      references: [users.id],
+    }),
+    department: one(departments, {
+      fields: [employeeUploadPermissions.departmentId],
+      references: [departments.id],
+    }),
+    grantedByUser: one(users, {
+      fields: [employeeUploadPermissions.grantedBy],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
    DIRECTOR SHARE PERMISSIONS
 ========================= */
 
@@ -97,6 +123,28 @@ export const directorSharePermissionsRelations = relations(
     }),
     grantedByUser: one(users, {
       fields: [directorSharePermissions.grantedBy],
+      references: [users.id],
+    }),
+  }),
+);
+
+/* =========================
+   DIRECTOR EMPLOYEE PERMISSIONS
+========================= */
+
+export const directorEmployeePermissionsRelations = relations(
+  directorEmployeePermissions,
+  ({ one }) => ({
+    director: one(users, {
+      fields: [directorEmployeePermissions.directorId],
+      references: [users.id],
+    }),
+    department: one(departments, {
+      fields: [directorEmployeePermissions.departmentId],
+      references: [departments.id],
+    }),
+    grantedByUser: one(users, {
+      fields: [directorEmployeePermissions.grantedBy],
       references: [users.id],
     }),
   }),
