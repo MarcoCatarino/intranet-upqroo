@@ -6,6 +6,7 @@ import { documentPermissions } from "../infrastructure/database/schema/document_
 import { departmentUsers } from "../infrastructure/database/schema/departments_users.schema.js";
 import { directorSharePermissions } from "../infrastructure/database/schema/director_share_permissions.schema.js";
 import { professorUploadPermissions } from "../infrastructure/database/schema/professor_upload_permissions.schema.js";
+import { employeeUploadPermissions } from "../infrastructure/database/schema/employee_upload_permissions.schema.js";
 
 export function documentRoleMiddleware(requiredPermission: string) {
   return async function (req: Request, res: Response, next: NextFunction) {
@@ -18,6 +19,7 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return res.status(400).json({ message: "Document id required" });
     }
 
+    // Admin bypasses everything
     if (userRole === "admin") {
       return next();
     }
@@ -38,10 +40,12 @@ export function documentRoleMiddleware(requiredPermission: string) {
 
     const doc = docResult[0];
 
+    // Document owner has full access
     if (doc.ownerId === userId) {
       return next();
     }
 
+    // Professor with upload permission enabled by their director
     if (requiredPermission === "upload_version" && userRole === "professor") {
       const uploadPerm = await db
         .select({ professorId: professorUploadPermissions.professorId })
@@ -61,6 +65,27 @@ export function documentRoleMiddleware(requiredPermission: string) {
       });
     }
 
+    // Employee with upload permission enabled by their director
+    if (requiredPermission === "upload_version" && userRole === "employee") {
+      const uploadPerm = await db
+        .select({ employeeId: employeeUploadPermissions.employeeId })
+        .from(employeeUploadPermissions)
+        .where(
+          and(
+            eq(employeeUploadPermissions.employeeId, userId!),
+            eq(employeeUploadPermissions.departmentId, doc.departmentId),
+          ),
+        )
+        .limit(1);
+
+      if (uploadPerm.length > 0) return next();
+
+      return res.status(403).json({
+        message: "No tienes permiso de subida en este departamento",
+      });
+    }
+
+    // Direct user permission
     const userDirectPermission = await db
       .select({ id: documentPermissions.id })
       .from(documentPermissions)
@@ -77,6 +102,7 @@ export function documentRoleMiddleware(requiredPermission: string) {
       return next();
     }
 
+    // Department-level permission (respects target_audience)
     const userDeptResult = await db
       .select({ departmentId: departmentUsers.departmentId })
       .from(departmentUsers)
@@ -104,7 +130,10 @@ export function documentRoleMiddleware(requiredPermission: string) {
                     eq(documentPermissions.targetAudience, "all"),
                     eq(documentPermissions.targetAudience, "students"),
                   )
-                : undefined,
+                : // employees and assistants: only "all" audience
+                  userRole === "employee" || userRole === "assistant"
+                  ? eq(documentPermissions.targetAudience, "all")
+                  : undefined,
           ),
         )
         .limit(1);
@@ -114,6 +143,7 @@ export function documentRoleMiddleware(requiredPermission: string) {
       }
     }
 
+    // Director with share permission enabled
     if (requiredPermission === "share" && userRole === "director") {
       if (!userDepartmentId) {
         return res.status(403).json({
