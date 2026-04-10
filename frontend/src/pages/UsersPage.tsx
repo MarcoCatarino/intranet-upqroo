@@ -16,7 +16,11 @@ const CREATABLE_ROLES: Record<string, { value: UserRole; label: string }[]> = {
     { value: "director", label: "Director" },
     { value: "assistant", label: "Asistente" },
   ],
-  director: [{ value: "professor", label: "Profesor" }],
+  director: [
+    { value: "professor", label: "Profesor" },
+    { value: "employee", label: "Empleado" },
+    { value: "assistant", label: "Asistente" },
+  ],
 };
 
 export function UsersPage() {
