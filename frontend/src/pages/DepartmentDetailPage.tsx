@@ -10,15 +10,23 @@ import {
   Upload,
   FileText,
   RefreshCw,
+  Briefcase,
+  ShieldCheck,
+  ShieldOff,
 } from "lucide-react";
 import { departmentsApi, studentsApi } from "@/services/api";
 import { PageHeader } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/Button";
-import { EmptyState, Spinner } from "@/components/ui/Badge";
+import { EmptyState, Spinner, Badge } from "@/components/ui/Badge";
 import { toast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
 import { cn, formatDateTime } from "@/lib/utils";
-import type { Department, Enrollment, User } from "@/types";
+import type {
+  Department,
+  Enrollment,
+  User,
+  EmployeeUploadPermission,
+} from "@/types";
 import { AddUserDialog } from "@/components/dialogs/AddUserDialog";
 
 export function DepartmentDetailPage() {
@@ -27,20 +35,30 @@ export function DepartmentDetailPage() {
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.role === "admin";
   const isDirector = currentUser?.role === "director";
+  const isSecretary = currentUser?.role === "secretary";
   const canManageEnrollments = isAdmin || isDirector;
+  const canManageEmployeeUpload = isAdmin || isDirector;
   const id = Number(departmentId);
 
   const [dept, setDept] = useState<Department | null>(null);
-  const [members, setMembers] = useState<User[]>([]);
+  const [members, setMembers] = useState<(User & { role: string })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
 
+  // Student enrollment state
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollmentTotal, setEnrollmentTotal] = useState(0);
   const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(false);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // Employee upload permissions state
+  const [employeeUploadPerms, setEmployeeUploadPerms] = useState<
+    EmployeeUploadPermission[]
+  >([]);
+  const [isLoadingEmpPerms, setIsLoadingEmpPerms] = useState(false);
+  const [togglingEmployee, setTogglingEmployee] = useState<string | null>(null);
 
   const load = async () => {
     setIsLoading(true);
@@ -50,7 +68,7 @@ export function DepartmentDetailPage() {
         departmentsApi.users(id),
       ]);
       setDept(d);
-      setMembers(m as unknown as User[]);
+      setMembers(m as unknown as (User & { role: string })[]);
     } catch {
       toast.error("No se pudo cargar el departamento");
       navigate("/departments");
@@ -72,12 +90,25 @@ export function DepartmentDetailPage() {
     }
   };
 
+  const loadEmployeeUploadPerms = async () => {
+    if (!canManageEmployeeUpload) return;
+    setIsLoadingEmpPerms(true);
+    try {
+      const perms = await departmentsApi.getEmployeeUploadPermissions(id);
+      setEmployeeUploadPerms(perms);
+    } catch {
+    } finally {
+      setIsLoadingEmpPerms(false);
+    }
+  };
+
   useEffect(() => {
     load();
     loadEnrollments();
+    loadEmployeeUploadPerms();
   }, [id]);
 
-  const handleRemove = async (userId: string) => {
+  const handleRemoveMember = async (userId: string) => {
     if (!confirm("¿Quitar este usuario del departamento?")) return;
     try {
       await departmentsApi.removeUser(id, userId);
@@ -85,6 +116,27 @@ export function DepartmentDetailPage() {
       load();
     } catch (err) {
       toast.error("Error", (err as Error).message);
+    }
+  };
+
+  const handleToggleEmployeeUpload = async (
+    employeeId: string,
+    currentlyEnabled: boolean,
+  ) => {
+    setTogglingEmployee(employeeId);
+    try {
+      if (currentlyEnabled) {
+        await departmentsApi.revokeEmployeeUpload(id, employeeId);
+        toast.success("Permiso de subida revocado");
+      } else {
+        await departmentsApi.grantEmployeeUpload(id, employeeId);
+        toast.success("Permiso de subida habilitado");
+      }
+      await loadEmployeeUploadPerms();
+    } catch (err) {
+      toast.error("Error", (err as Error).message);
+    } finally {
+      setTogglingEmployee(null);
     }
   };
 
@@ -98,7 +150,6 @@ export function DepartmentDetailPage() {
       toast.error("Archivo muy grande", "El CSV no puede superar 500 KB");
       return;
     }
-
     setIsUploadingCsv(true);
     try {
       const result = await studentsApi.uploadCsv(file, id);
@@ -130,6 +181,12 @@ export function DepartmentDetailPage() {
     );
   if (!dept) return null;
 
+  // Filter employees from members list
+  const employees = members.filter((m) => m.role === "employee");
+  const enabledEmployeeIds = new Set(
+    employeeUploadPerms.map((p) => p.employeeId),
+  );
+
   return (
     <div className="p-[var(--content-padding)] max-w-[var(--content-max-width)] animate-fade-in">
       <button
@@ -151,7 +208,7 @@ export function DepartmentDetailPage() {
         }
       />
 
-      {/* Info del departamento */}
+      {/* Dept info */}
       <div className="flex items-center gap-4 p-5 bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] mb-6">
         <div className="w-12 h-12 rounded-[var(--radius-lg)] bg-[var(--color-brand-orange)]/10 flex items-center justify-center">
           <Building2 size={24} className="text-[var(--color-brand-orange)]" />
@@ -170,7 +227,7 @@ export function DepartmentDetailPage() {
         </div>
       </div>
 
-      {/* Miembros del departamento */}
+      {/* Members */}
       <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] overflow-hidden mb-6">
         <div className="px-5 py-3.5 border-b border-[var(--color-surface-border)]">
           <h3 className="font-display text-base text-[var(--color-text-primary)]">
@@ -205,9 +262,22 @@ export function DepartmentDetailPage() {
                     {m.email}
                   </p>
                 </div>
+                <Badge
+                  variant={
+                    m.role === "director"
+                      ? "info"
+                      : m.role === "employee"
+                        ? "warning"
+                        : m.role === "professor"
+                          ? "success"
+                          : "default"
+                  }
+                >
+                  {m.role}
+                </Badge>
                 {isAdmin && (
                   <button
-                    onClick={() => handleRemove(m.id)}
+                    onClick={() => handleRemoveMember(m.id)}
                     className="p-1.5 rounded text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={13} />
@@ -219,7 +289,94 @@ export function DepartmentDetailPage() {
         )}
       </div>
 
-      {/* ── Padrón de alumnos (solo director y admin) ── */}
+      {/* ── Employee upload permissions (director + admin) ── */}
+      {canManageEmployeeUpload && employees.length > 0 && (
+        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] overflow-hidden mb-6">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-surface-border)]">
+            <div className="flex items-center gap-2">
+              <Briefcase
+                size={16}
+                className="text-[var(--color-brand-orange)]"
+              />
+              <h3 className="font-display text-base text-[var(--color-text-primary)]">
+                Subida de archivos — Empleados
+              </h3>
+            </div>
+            <button
+              onClick={loadEmployeeUploadPerms}
+              disabled={isLoadingEmpPerms}
+              className="p-1.5 rounded text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              title="Actualizar"
+            >
+              <RefreshCw
+                size={13}
+                className={isLoadingEmpPerms ? "animate-spin" : ""}
+              />
+            </button>
+          </div>
+
+          <div className="px-5 py-3 bg-[var(--color-surface-secondary)] border-b border-[var(--color-surface-border)]">
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Habilita o deshabilita el permiso de subir archivos para cada
+              empleado del departamento.
+            </p>
+          </div>
+
+          {isLoadingEmpPerms ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="divide-y divide-[var(--color-surface-border)]">
+              {employees.map((emp) => {
+                const enabled = enabledEmployeeIds.has(emp.id);
+                const isToggling = togglingEmployee === emp.id;
+                return (
+                  <div
+                    key={emp.id}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--color-surface-secondary)] transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 text-sm font-semibold shrink-0">
+                      {emp.name[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                        {emp.name}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)] truncate">
+                        {emp.email}
+                      </p>
+                    </div>
+                    <Badge variant={enabled ? "success" : "default"}>
+                      {enabled ? "Habilitado" : "Sin permiso"}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant={enabled ? "danger" : "secondary"}
+                      isLoading={isToggling}
+                      onClick={() =>
+                        handleToggleEmployeeUpload(emp.id, enabled)
+                      }
+                    >
+                      {enabled ? (
+                        <>
+                          <ShieldOff size={12} /> Revocar
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck size={12} /> Habilitar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Student enrollment (director + admin) ── */}
       {canManageEnrollments && (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-surface-border)] shadow-[var(--shadow-card)] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-surface-border)]">
@@ -250,7 +407,7 @@ export function DepartmentDetailPage() {
             </button>
           </div>
 
-          {/* Zona de upload CSV */}
+          {/* CSV upload zone */}
           <div className="p-5 border-b border-[var(--color-surface-border)]">
             <div
               className={cn(
@@ -315,7 +472,7 @@ export function DepartmentDetailPage() {
             </div>
           </div>
 
-          {/* Lista del padrón actual */}
+          {/* Enrollment list */}
           {isLoadingEnrollments ? (
             <div className="flex justify-center py-8">
               <Spinner />
