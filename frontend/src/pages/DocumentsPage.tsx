@@ -20,7 +20,11 @@ import { CreateDocumentDialog } from "@/components/dialogs/CreateDocumentDialog"
 import { UploadFileDialog } from "@/components/dialogs/UploadFileDialog";
 import { ShareDocumentDialog } from "@/components/dialogs/ShareDocumentDialog";
 import { toast } from "@/components/ui/Toast";
-import { canUploadDocuments, canShareDocuments } from "@/lib/utils";
+import {
+  canUploadDocuments,
+  canShareDocuments,
+  isReadOnlyRole,
+} from "@/lib/utils";
 import type { Department, Document } from "@/types";
 
 export function DocumentsPage() {
@@ -40,7 +44,7 @@ export function DocumentsPage() {
   const canCreate = canUploadDocuments(user?.role);
   const canShare = canShareDocuments(user?.role);
 
-  const isReadOnlyRole = user?.role === "student" || user?.role === "professor";
+  const readOnly = isReadOnlyRole(user?.role);
 
   const isUnassignedStudent =
     user?.role === "student" && user?.departmentId == null;
@@ -105,7 +109,7 @@ export function DocumentsPage() {
 
   const emptyDescription = isSearchMode
     ? `No se encontraron documentos para "${searchQuery}"`
-    : isReadOnlyRole
+    : readOnly
       ? "No tienes documentos compartidos contigo aún."
       : "Crea tu primer documento con el botón superior.";
 
@@ -206,7 +210,7 @@ export function DocumentsPage() {
             }
           />
         </div>
-      ) : isReadOnlyRole && !isSearchMode ? (
+      ) : readOnly && !isSearchMode ? (
         <DocumentsByDepartment
           documents={displayDocs}
           departments={departments}
