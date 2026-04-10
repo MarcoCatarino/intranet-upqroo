@@ -6,13 +6,20 @@ import { Input, Select } from "@/components/ui/Input";
 import { toast } from "@/components/ui/Toast";
 import type { Department, UserRole } from "@/types";
 
+/**
+ * Mirrors CREATABLE_ROLES in backend/src/modules/users/users.validators.ts
+ */
 const CREATABLE_ROLES: Record<string, { value: UserRole; label: string }[]> = {
   admin: [{ value: "secretary", label: "Secretaría" }],
   secretary: [
     { value: "director", label: "Director" },
     { value: "assistant", label: "Asistente" },
   ],
-  director: [{ value: "professor", label: "Profesor" }],
+  director: [
+    { value: "professor", label: "Profesor" },
+    { value: "employee", label: "Empleado" },
+    { value: "assistant", label: "Asistente" },
+  ],
 };
 
 export function CreateUserDialog({
@@ -27,6 +34,7 @@ export function CreateUserDialog({
   onSuccess: () => void;
 }) {
   const rolesAllowed = CREATABLE_ROLES[creatorRole] ?? [];
+  const isDirectorCreating = creatorRole === "director";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,15 +46,23 @@ export function CreateUserDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Roles that need a department (only relevant when NOT a director, since
+  // directors always get their own department auto-assigned in the backend)
   const needsDept =
-    role === "director" || role === "assistant" || role === "professor";
+    !isDirectorCreating &&
+    (role === "director" ||
+      role === "assistant" ||
+      role === "professor" ||
+      role === "employee");
 
   useEffect(() => {
     if (!open) return;
-    departmentsApi
-      .list()
-      .then(setDepartments)
-      .catch(() => {});
+    if (!isDirectorCreating) {
+      departmentsApi
+        .list()
+        .then(setDepartments)
+        .catch(() => {});
+    }
     setName("");
     setEmail("");
     setRole(rolesAllowed[0]?.value ?? "professor");
@@ -121,6 +137,8 @@ export function CreateUserDialog({
             label: r.label,
           }))}
         />
+
+        {/* Department selector — hidden for directors, they get their dept auto-assigned */}
         {needsDept && (
           <Select
             label="Departamento"
@@ -135,6 +153,22 @@ export function CreateUserDialog({
               })),
             ]}
           />
+        )}
+
+        {isDirectorCreating &&
+          (role === "professor" ||
+            role === "employee" ||
+            role === "assistant") && (
+            <p className="text-xs text-[var(--color-text-muted)] px-3 py-2 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)]">
+              Se asignará automáticamente a tu departamento.
+            </p>
+          )}
+
+        {role === "employee" && !isDirectorCreating && (
+          <p className="text-xs text-[var(--color-status-warning)] px-3 py-2 bg-amber-50 rounded-[var(--radius-md)]">
+            El director del departamento debe tener habilitado el permiso de
+            creación de empleados.
+          </p>
         )}
       </div>
 
