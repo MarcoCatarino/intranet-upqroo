@@ -6,6 +6,7 @@ export type UserRole =
   | "director"
   | "assistant"
   | "professor"
+  | "employee"
   | "student";
 
 export const users = mysqlTable("users", {
