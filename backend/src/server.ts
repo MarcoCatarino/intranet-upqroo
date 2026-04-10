@@ -11,6 +11,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 import documentRoutes from "./modules/documents/documents.routes.js";
 import studentsRoutes from "./modules/students/students.routes.js";
+import { apiRateLimiter } from "./middleware/rateLimit.middleware.js";
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ if (cluster.isPrimary) {
   app.use(cookieParser());
 
   app.use("/auth", authRoutes);
+  app.use(apiRateLimiter);
   app.use("/users", usersRoutes);
   app.use("/documents", documentRoutes);
   app.use("/students", studentsRoutes);
