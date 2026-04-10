@@ -14,11 +14,8 @@ export function formatFileSize(bytes: number): string {
 
 export function formatDate(dateStr: string | Date | null | undefined): string {
   if (!dateStr) return "—";
-
   const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
-
   if (isNaN(date.getTime())) return "—";
-
   return new Intl.DateTimeFormat("es-MX", {
     day: "2-digit",
     month: "short",
@@ -30,11 +27,8 @@ export function formatDateTime(
   dateStr: string | Date | null | undefined,
 ): string {
   if (!dateStr) return "—";
-
   const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
-
   if (isNaN(date.getTime())) return "—";
-
   return new Intl.DateTimeFormat("es-MX", {
     day: "2-digit",
     month: "short",
@@ -60,6 +54,10 @@ export function canManageDepartments(role: UserRole | undefined): boolean {
   return hasRole(role, "admin");
 }
 
+/**
+ * Roles that can upload without special permission.
+ * professor and employee need explicit permission from their director — handled separately.
+ */
 export function canUploadDocuments(role: UserRole | undefined): boolean {
   return hasRole(role, "admin", "secretary", "director", "assistant");
 }
@@ -74,6 +72,14 @@ export function canDeleteDocuments(role: UserRole | undefined): boolean {
 
 export function canViewAudit(role: UserRole | undefined): boolean {
   return hasRole(role, "admin", "secretary", "director");
+}
+
+/**
+ * Roles that are read-only in the document list view
+ * (shown in grouped-by-department layout instead of the full table).
+ */
+export function isReadOnlyRole(role: UserRole | undefined): boolean {
+  return hasRole(role, "student", "professor", "employee");
 }
 
 export const PERMISSION_LABELS: Record<string, string> = {
