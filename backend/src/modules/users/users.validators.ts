@@ -14,15 +14,23 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
 });
 
+/**
+ * Defines which roles each creator can create.
+ *
+ * admin     → secretary  (top of the chain)
+ * secretary → director | assistant
+ * director  → professor | employee | assistant
+ *             (employee only if director has director_employee_permissions)
+ */
 export const CREATABLE_ROLES: Record<string, UserRole[]> = {
   admin: ["secretary"],
   secretary: ["director", "assistant"],
-  director: ["professor"],
+  director: ["professor", "employee", "assistant"],
 };
 
 export const createUserSchema = z.object({
   name: z.string().min(2).max(150),
   email: z.string().email().endsWith("@upqroo.edu.mx"),
-  role: z.enum(["secretary", "director", "assistant", "professor"]),
+  role: z.enum(["secretary", "director", "assistant", "professor", "employee"]),
   departmentId: z.number().optional(),
 });

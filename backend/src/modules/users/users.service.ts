@@ -9,6 +9,7 @@ import {
 } from "./users.repository.js";
 
 import { addUserToDepartment } from "../departments/departments.repository.js";
+import { getDirectorEmployeePermission } from "../departments/departments.repository.js";
 
 import { CREATABLE_ROLES } from "./users.validators.js";
 import type { UserRole } from "../../infrastructure/database/schema/users.schema.js";
@@ -41,6 +42,7 @@ export async function createManagedUserService(data: {
   role: UserRole;
   departmentId?: number;
 }) {
+  // ── 1. Role hierarchy check ──────────────────────────────────────────────
   const allowed = CREATABLE_ROLES[data.creatorRole] ?? [];
   if (!allowed.includes(data.role)) {
     throw new Error(
@@ -48,6 +50,7 @@ export async function createManagedUserService(data: {
     );
   }
 
+  // ── 2. Director-specific logic ───────────────────────────────────────────
   if (data.creatorRole === "director") {
     const creatorDept = await getDepartmentOfUser(data.creatorId);
 
@@ -55,18 +58,35 @@ export async function createManagedUserService(data: {
       throw new Error("El director no tiene un departamento asignado");
     }
 
+    // Directors always get their own department assigned to created users
     data.departmentId = creatorDept;
+
+    // Employee creation requires explicit permission granted by secretary/admin
+    if (data.role === "employee") {
+      const perm = await getDirectorEmployeePermission(
+        data.creatorId,
+        creatorDept,
+      );
+      if (!perm) {
+        throw new Error(
+          "No tienes permiso para crear empleados. Solicita a tu Secretaría que te habilite este permiso.",
+        );
+      }
+    }
   }
 
+  // ── 3. Department required for certain roles ─────────────────────────────
   if (
     (data.role === "director" ||
       data.role === "assistant" ||
-      data.role === "professor") &&
+      data.role === "professor" ||
+      data.role === "employee") &&
     !data.departmentId
   ) {
     throw new Error("Se requiere departmentId para este rol");
   }
 
+  // ── 4. Create user and assign department ─────────────────────────────────
   const newUserId = await createManagedUser({
     email: data.email,
     name: data.name,
